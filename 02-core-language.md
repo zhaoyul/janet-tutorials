@@ -1,0 +1,664 @@
+# 第二章：核心语言特性
+
+深入理解 Janet 的核心语言机制，以及它与其他 Lisp 方言的异同。
+
+## 2.1 S-表达式与语法
+
+### 基本 S-表达式
+
+Janet 使用 S-表达式（Symbolic Expressions），这对 Lisp 程序员来说非常熟悉：
+
+```janet
+# 原子（Atoms）
+42              # 数字
+"hello"         # 字符串
+:keyword        # 关键字
+'symbol         # 符号
+true            # 布尔值
+nil             # 空值
+
+# 复合表达式（Lists）
+(+ 1 2 3)       # 函数调用
+(def x 10)      # 特殊形式
+[1 2 3]         # 元组（Tuple）
+@[1 2 3]        # 数组（Array）
+{:a 1 :b 2}     # 结构体（Struct）
+@{:a 1 :b 2}    # 表（Table）
+```
+
+### 读取器语法（Reader Syntax）
+
+Janet 的读取器提供了一些语法糖：
+
+```janet
+# 引用（Quote）
+'x              # 等价于 (quote x)
+'(1 2 3)        # 等价于 (quote (1 2 3))
+
+# 准引用（Quasiquote）
+~(+ 1 ,x)       # 等价于 (quasiquote (+ 1 (unquote x)))
+~[1 2 ,@ys]     # 解构序列
+
+# 短函数字面量（类似 Clojure）
+|(+ $ 1)        # 等价于 (fn [x] (+ x 1))
+|($0 $1)        # 等价于 (fn [x y] (x y))
+
+# 字符串相关
+``long string`` # 长字符串（多行）
+@"buffer"       # 可变字符串缓冲区
+```
+
+### 与其他 Lisp 的语法差异
+
+| 特性 | Common Lisp | Scheme | Clojure | Janet |
+|------|-------------|--------|---------|-------|
+| 注释 | `;` | `;` | `;` | `#` |
+| 向量字面量 | `#(...)` | `#(...)` | `[...]` | `[...]` |
+| Map 字面量 | N/A | N/A | `{...}` | `{...}` |
+| 关键字 | `:x` | N/A | `:x` | `:x` |
+| 字符 | `#\a` | `#\a` | `\a` | (无独立字符类型) |
+| 引用 | `'x` | `'x` | `'x` | `'x` |
+| 准引用 | `` `x`` | `` `x`` | `` `x`` | `~x` |
+| 反引用 | `,x` | `,x` | `~x` | `,x` |
+
+## 2.2 求值模型
+
+### 基本求值规则
+
+Janet 的求值模型：
+
+1. **自求值对象**：数字、字符串、布尔值、关键字 → 求值为自身
+2. **符号**：查找绑定的值
+3. **序列**：
+   - 第一个元素是函数 → 函数调用
+   - 第一个元素是特殊形式 → 特殊处理
+
+```janet
+# 自求值
+42              # => 42
+"hello"         # => "hello"
+:key            # => :key
+
+# 符号求值
+(def x 10)
+x               # => 10
+
+# 函数调用
+(+ 1 2)         # => 3
+
+# 特殊形式
+(if true "yes" "no")  # => "yes"
+```
+
+### 特殊形式（Special Forms）
+
+Janet 的特殊形式列表：
+
+#### 定义与绑定
+
+```janet
+# def - 定义不可变绑定
+(def pi 3.14159)
+
+# var - 定义可变绑定
+(var counter 0)
+(set counter 1)  # 修改
+
+# defn - 定义函数
+(defn square [x] (* x x))
+
+# fn - 匿名函数
+(fn [x] (* x x))
+
+# let - 局部绑定
+(let [x 10
+      y 20]
+  (+ x y))
+
+# defmacro - 定义宏
+(defmacro unless [condition & body]
+  ~(if (not ,condition) ,;body))
+```
+
+#### 控制流
+
+```janet
+# if - 条件表达式
+(if (> x 0)
+  "positive"
+  "non-positive")
+
+# when - 单分支条件（隐式 do）
+(when (> x 0)
+  (print "positive")
+  (print "continuing"))
+
+# cond - 多分支条件
+(cond
+  (< x 0) "negative"
+  (> x 0) "positive"
+  "zero")
+
+# case - 模式匹配（简单）
+(case x
+  1 "one"
+  2 "two"
+  "other")
+
+# match - 高级模式匹配
+(match [x y]
+  [0 0] "origin"
+  [0 _] "on y-axis"
+  [_ 0] "on x-axis"
+  "somewhere else")
+
+# do - 顺序求值
+(do
+  (print "first")
+  (print "second")
+  42)  # 返回最后一个表达式的值
+```
+
+#### 循环
+
+```janet
+# while - 条件循环
+(var i 0)
+(while (< i 5)
+  (print i)
+  (set i (inc i)))
+
+# for - 迭代循环
+(for i 0 5
+  (print i))
+
+# each - 遍历序列
+(each x [1 2 3 4 5]
+  (print x))
+
+# loop - 通用循环（带递归）
+(loop [i :range [0 5]]
+  (print i))
+
+# break - 跳出循环
+(for i 0 10
+  (if (= i 5) (break))
+  (print i))
+```
+
+#### 函数与作用域
+
+```janet
+# do - 创建新作用域
+(do
+  (def local-var 42)
+  local-var)
+# local-var 在这里不可见
+
+# upscope - 将绑定提升到外层作用域
+(do
+  (def x 10)
+  (upscope x))
+x  # 现在可以访问
+
+# with-syms - 生成唯一符号（用于宏）
+(with-syms [x y]
+  ~(let [,x 1 ,y 2]
+     (+ ,x ,y)))
+```
+
+### 与其他 Lisp 的求值差异
+
+#### Common Lisp vs Janet
+
+```lisp
+; Common Lisp - 分离的函数和值命名空间
+(defun foo () 42)
+(let ((foo 10))
+  (foo))  ; 调用函数，返回 42
+
+(let ((foo 10))
+  foo)    ; 访问变量，返回 10
+```
+
+```janet
+# Janet - 统一的命名空间（类似 Scheme）
+(defn foo [] 42)
+(let [foo 10]
+  (foo))  # 错误！foo 是数字，不是函数
+
+# 解决方法：使用不同的名字
+(let [foo-val 10]
+  (foo))  # OK，调用函数
+```
+
+#### Scheme vs Janet
+
+```scheme
+; Scheme - call/cc 的 continuation
+(call/cc
+  (lambda (k)
+    (k 42)))
+```
+
+```janet
+# Janet - 使用 fibers（协程）
+(defn generator []
+  (coro
+    (yield 1)
+    (yield 2)
+    (yield 3)))
+
+(def gen (generator))
+(resume gen)  # 1
+(resume gen)  # 2
+```
+
+## 2.3 词法作用域与闭包
+
+### 词法作用域
+
+Janet 使用词法作用域（Lexical Scoping），与 Scheme 和 Clojure 类似：
+
+```janet
+(def x 10)
+
+(defn outer []
+  (def x 20)
+  (defn inner []
+    x)  # 引用 outer 的 x，不是全局的 x
+  (inner))
+
+(outer)  # => 20
+x        # => 10
+```
+
+### 闭包（Closures）
+
+闭包是 Janet 的一等公民：
+
+```janet
+# 简单闭包
+(defn make-adder [n]
+  (fn [x] (+ x n)))
+
+(def add5 (make-adder 5))
+(add5 10)  # => 15
+
+# 闭包捕获可变状态
+(defn make-counter []
+  (var count 0)
+  (fn []
+    (set count (inc count))
+    count))
+
+(def counter1 (make-counter))
+(counter1)  # => 1
+(counter1)  # => 2
+(counter1)  # => 3
+
+(def counter2 (make-counter))
+(counter2)  # => 1  # 独立的状态
+```
+
+### 闭包的实际应用
+
+```janet
+# 柯里化（Currying）
+(defn curry2 [f]
+  (fn [x]
+    (fn [y]
+      (f x y))))
+
+(def curried-add (curry2 +))
+((curried-add 5) 3)  # => 8
+
+# 部分应用（Partial Application）
+(defn partial [f & args]
+  (fn [& more-args]
+    (f ;args ;more-args)))
+
+(def add5 (partial + 5))
+(add5 10)  # => 15
+
+# 实际上 Janet 内置了 partial
+(def add5 (partial + 5))
+```
+
+### 与其他 Lisp 的闭包对比
+
+所有现代 Lisp 都支持闭包，但实现细节不同：
+
+```lisp
+; Common Lisp - 需要注意变量捕获
+(let ((x 10))
+  (lambda () x))  ; 闭包
+
+; 但循环变量需要特别处理
+(loop for i from 0 to 2
+      collect (lambda () i))  ; 所有闭包都引用同一个 i！
+```
+
+```janet
+# Janet - 闭包自然捕获（类似 Scheme）
+(map (fn [i] (fn [] i)) (range 3))
+# 每个闭包都有独立的 i
+```
+
+## 2.4 函数调用与参数传递
+
+### 基本函数调用
+
+```janet
+# 固定参数
+(defn add [x y]
+  (+ x y))
+(add 1 2)  # => 3
+
+# 可变参数（variadic）
+(defn sum [& numbers]
+  (reduce + 0 numbers))
+(sum 1 2 3 4 5)  # => 15
+
+# 混合：固定 + 可变
+(defn greet [name & titles]
+  (string "Hello, " (string/join titles " ") " " name))
+(greet "Smith" "Dr." "Professor")  # => "Hello, Dr. Professor Smith"
+
+# 解构参数
+(defn process-point [[x y]]
+  (+ x y))
+(process-point [3 4])  # => 7
+
+# 关键字参数（使用结构体）
+(defn make-person [& {:name "Unknown" :age 0}]
+  {:name name :age age})
+(make-person :name "Alice" :age 30)
+```
+
+### 函数参数模式
+
+```janet
+# 默认参数（通过解构）
+(defn greet [name &opt greeting]
+  (default greeting "Hello")
+  (string greeting ", " name))
+(greet "Alice")          # => "Hello, Alice"
+(greet "Bob" "Hi")       # => "Hi, Bob"
+
+# 命名参数（destructuring）
+(defn config [& {:host "localhost" :port 8080 :debug false}]
+  {:host host :port port :debug debug})
+
+(config)  # => {:host "localhost" :port 8080 :debug false}
+(config :port 3000 :debug true)
+# => {:host "localhost" :port 3000 :debug true}
+```
+
+### Apply 和 Juxt
+
+```janet
+# apply - 将序列作为参数应用
+(apply + [1 2 3 4 5])  # => 15
+# 等价于 (+ 1 2 3 4 5)
+
+# juxt - 并行应用多个函数
+((juxt inc dec) 5)  # => [6 4]
+
+# 实用例子
+(defn stats [numbers]
+  ((juxt length sum mean) numbers))
+# 待续：需要定义 sum 和 mean
+```
+
+## 2.5 命名约定与风格
+
+### Janet 命名规范
+
+```janet
+# 变量和函数：kebab-case
+(def my-variable 42)
+(defn my-function [x] ...)
+
+# 常量：kebab-case（无特殊标记）
+(def max-connections 100)
+
+# 谓词（predicate）：问号后缀
+(defn even? [n] (zero? (mod n 2)))
+(defn empty? [coll] (= (length coll) 0))
+
+# 破坏性操作：无特殊后缀（通过类型推断）
+(put arr 0 42)    # 修改数组
+(array/push arr x)  # 添加元素
+
+# 转换函数：使用 ->
+(def str->int scan-number)
+(def int->str string)
+
+# 私有函数：- 前缀（约定）
+(defn- helper-function [x] ...)
+```
+
+### 与其他 Lisp 的命名对比
+
+| 约定 | Common Lisp | Scheme | Clojure | Janet |
+|------|-------------|--------|---------|-------|
+| 变量名 | `*name*` | `name` | `name` | `name` |
+| 常量 | `+name+` | `name` | `NAME` | `name` |
+| 谓词 | `-p` 或 `p` | `?` | `?` | `?` |
+| 破坏性 | `n-` 前缀 | `!` | (避免) | (通过类型) |
+| 转换 | `->` | `->` | `->` | `->` |
+| 私有 | 包系统 | 模块系统 | `-` 后缀 | `-` 前缀 |
+
+## 2.6 错误处理
+
+### Try-Catch
+
+```janet
+# 基本错误处理
+(try
+  (/ 1 0)
+  ([err]
+   (print "Error: " err)
+   nil))
+
+# 捕获特定错误（通过模式匹配）
+(try
+  (some-risky-operation)
+  ([err]
+   (match err
+     [:io-error msg] (print "I/O Error: " msg)
+     [:parse-error line] (print "Parse error at line " line)
+     (error err))))  # 重新抛出
+
+# Finally 语义（使用 defer）
+(defn read-file [path]
+  (def f (file/open path))
+  (defer (file/close f)
+    (file/read f :all)))
+```
+
+### Error 和 Assert
+
+```janet
+# 抛出错误
+(error "Something went wrong")
+
+# 带附加信息的错误
+(error [:custom-error "message" {:data 42}])
+
+# 断言
+(assert (> x 0) "x must be positive")
+
+# 条件断言（仅在开发模式）
+(when-let [result (validate-input x)]
+  (error result))
+```
+
+### 与其他 Lisp 的错误处理对比
+
+#### Common Lisp - 条件系统
+
+```lisp
+; Common Lisp 有强大的条件系统
+(handler-case
+    (/ 1 0)
+  (division-by-zero ()
+    :handled))
+
+; 可重启计算
+(restart-case
+    (error "Something wrong")
+  (use-value (value)
+    value)
+  (continue ()
+    :ignored))
+```
+
+#### Janet - 简化的方法
+
+```janet
+# Janet 更简单，类似 Scheme/Clojure
+(try
+  (/ 1 0)
+  ([err] :handled))
+
+# 自定义错误类型通过数据结构
+(defn safe-div [a b]
+  (if (zero? b)
+    [:error "Division by zero"]
+    [:ok (/ a b)]))
+
+(match (safe-div 10 0)
+  [:ok result] (print result)
+  [:error msg] (print "Error: " msg))
+```
+
+## 2.7 模块化编程预览
+
+### 基本模块导入
+
+```janet
+# 导入标准库模块
+(import spork/json)
+(json/encode {:key "value"})
+
+# 导入自定义模块
+(import ./mymodule)
+(mymodule/some-function)
+
+# 导入并重命名
+(import spork/json :as j)
+(j/encode data)
+
+# 只导入特定符号
+(import spork/json :prefix "" :only [encode decode])
+(encode data)
+```
+
+更多细节将在第六章详细讨论。
+
+## 2.8 实践练习
+
+### 练习 1：闭包实践
+
+实现一个银行账户系统，使用闭包保持状态：
+
+```janet
+(defn make-account [initial-balance]
+  # TODO: 返回一个包含 deposit 和 withdraw 函数的表
+  )
+
+# 使用示例
+(def account (make-account 100))
+((account :deposit) 50)     # 余额变为 150
+((account :withdraw) 30)    # 余额变为 120
+((account :balance))        # 返回 120
+```
+
+<details>
+<summary>参考答案</summary>
+
+```janet
+(defn make-account [initial-balance]
+  (var balance initial-balance)
+  @{:deposit (fn [amount]
+               (set balance (+ balance amount))
+               balance)
+    :withdraw (fn [amount]
+                (if (>= balance amount)
+                  (do
+                    (set balance (- balance amount))
+                    balance)
+                  (error "Insufficient funds")))
+    :balance (fn [] balance)})
+```
+</details>
+
+### 练习 2：错误处理
+
+实现一个安全的除法函数，处理除零和非数字输入：
+
+```janet
+(defn safe-divide [a b]
+  # TODO: 返回 [:ok result] 或 [:error message]
+  )
+
+# 测试
+(safe-divide 10 2)   # => [:ok 5]
+(safe-divide 10 0)   # => [:error "Division by zero"]
+(safe-divide 10 "x") # => [:error "Invalid input"]
+```
+
+### 练习 3：高阶函数
+
+实现一个函数组合器：
+
+```janet
+(defn compose [& fns]
+  # TODO: 返回组合后的函数
+  )
+
+# 使用
+(def add1-then-square (compose |(* $ $) inc))
+(add1-then-square 4)  # => 25  (因为 (4+1)^2 = 25)
+```
+
+<details>
+<summary>参考答案</summary>
+
+```janet
+(defn compose [& fns]
+  (fn [x]
+    (reduce (fn [acc f] (f acc))
+            x
+            (reverse fns))))
+```
+</details>
+
+## 2.9 总结
+
+本章我们学习了：
+
+- ✓ Janet 的 S-表达式语法
+- ✓ 求值模型和特殊形式
+- ✓ 词法作用域与闭包
+- ✓ 函数调用和参数传递
+- ✓ 命名约定
+- ✓ 错误处理机制
+
+### 关键要点
+
+1. **语法接近 Clojure** - 如果你懂 Clojure，Janet 的语法几乎零学习成本
+2. **统一命名空间** - 不像 Common Lisp，函数和值共享命名空间
+3. **简化的错误处理** - 使用 try/catch，没有 CL 的条件系统
+4. **闭包是核心** - 类似 Scheme，闭包用于状态管理和抽象
+5. **特殊形式有限** - 比 Common Lisp 少得多，学习曲线平缓
+
+### 下一步
+
+继续前往 [第三章：数据结构与类型系统](./03-data-structures.md)，学习 Janet 丰富的数据类型。
+
+---
+
+← [上一章：快速入门](./01-getting-started.md) | [返回目录](./README.md) | [下一章：数据结构与类型系统](./03-data-structures.md) →
