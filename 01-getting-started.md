@@ -1,0 +1,505 @@
+# 第一章：快速入门
+
+欢迎来到 Janet 的世界！作为一位熟悉 Lisp 的开发者，你会发现 Janet 的许多概念似曾相识，但也有独特之处。
+
+## 1.1 安装 Janet
+
+### Linux/macOS
+
+#### 从源码编译（推荐）
+
+```bash
+# 克隆仓库
+git clone https://github.com/janet-lang/janet.git
+cd janet
+
+# 编译（需要 C 编译器和 make）
+make
+
+# 安装（可选，默认安装到 /usr/local）
+sudo make install
+
+# 或安装到用户目录
+make install PREFIX=$HOME/.local
+```
+
+#### 使用包管理器
+
+```bash
+# macOS - Homebrew
+brew install janet
+
+# Arch Linux
+sudo pacman -S janet
+
+# Fedora
+sudo dnf install janet
+
+# Ubuntu/Debian（可能需要 PPA）
+# 建议从源码编译以获取最新版本
+```
+
+### Windows
+
+下载预编译二进制：
+```powershell
+# 使用 winget
+winget install JanetLang.Janet
+
+# 或从 GitHub Releases 下载
+# https://github.com/janet-lang/janet/releases
+```
+
+### 验证安装
+
+```bash
+# 检查版本
+janet -v
+# 应该看到类似：v1.34.0-xxx
+
+# 启动 REPL
+janet
+```
+
+## 1.2 REPL：你的新朋友
+
+Janet REPL 类似于 Common Lisp 或 Scheme 的 REPL，但更加轻量。
+
+```janet
+$ janet
+Janet 1.34.0-dev-...  Copyright (C) 2017-2024 Calvin Rose
+janet:0:> 
+```
+
+### REPL 基础命令
+
+```janet
+# 基本运算
+janet:1:> (+ 1 2 3)
+6
+
+# 定义变量
+janet:2:> (def x 42)
+x
+
+# 查看变量
+janet:3:> x
+42
+
+# 定义函数
+janet:4:> (defn square [n] (* n n))
+<function square>
+
+# 调用函数
+janet:5:> (square 5)
+25
+
+# 获取帮助（类似 Common Lisp 的 describe）
+janet:6:> (doc +)
+...
+
+# 查看所有绑定
+janet:7:> (all-bindings)
+
+# 退出 REPL
+janet:8:> (os/exit)
+# 或者按 Ctrl+D
+```
+
+### REPL 特性
+
+与其他 Lisp REPL 的对比：
+
+| 特性 | Janet | Common Lisp | Scheme | Clojure |
+|------|-------|-------------|--------|---------|
+| 启动速度 | 毫秒级 | 秒级 | 快 | 慢（JVM） |
+| 历史记录 | ✓ | ✓ | ✓ | ✓ |
+| 自动补全 | ✓ | ✓ | 依赖实现 | ✓ |
+| 多行编辑 | ✓ | ✓ | ✓ | ✓ |
+| 实时代码重载 | ✓ | ✓ | ✓ | ✓ |
+
+## 1.3 第一个 Janet 程序
+
+### Hello World（对比其他 Lisp）
+
+创建文件 `hello.janet`:
+
+```janet
+# Janet
+(print "Hello, World!")
+```
+
+对比：
+
+```lisp
+; Common Lisp
+(format t "Hello, World!~%")
+
+; Scheme
+(display "Hello, World!")
+(newline)
+
+; Clojure
+(println "Hello, World!")
+```
+
+运行程序：
+
+```bash
+janet hello.janet
+# 输出：Hello, World!
+```
+
+### 更复杂的例子：Fibonacci
+
+```janet
+# 递归实现（带尾调用优化）
+(defn fib [n]
+  (defn fib-helper [n a b]
+    (if (<= n 0)
+      a
+      (fib-helper (- n 1) b (+ a b))))
+  (fib-helper n 0 1))
+
+# 测试
+(print (fib 10))  # 输出：55
+
+# 序列生成（惰性）
+(defn fib-seq []
+  (generate [a 0 b 1]
+    (do
+      (yield a)
+      (set a b)
+      (set b (+ a b)))))
+
+# 获取前 10 个 Fibonacci 数
+(print (take 10 (fib-seq)))  # 输出：@[0 1 1 2 3 5 8 13 21 34]
+```
+
+### 编译为可执行文件
+
+Janet 可以将脚本编译为独立的本地可执行文件：
+
+```bash
+# 创建可执行文件
+jpm build
+
+# 或使用 janet 直接创建
+# 需要先创建 project.janet 文件（参见第六章）
+```
+
+## 1.4 语法快速对比
+
+### 基本语法
+
+```janet
+# Janet 使用 # 作为注释（类似 Scheme）
+# 而不是 Common Lisp 的 ;
+
+# 定义变量（immutable）
+(def pi 3.14159)
+
+# 定义可变变量
+(var counter 0)
+
+# 定义函数
+(defn add [x y]
+  (+ x y))
+
+# lambda（匿名函数）
+(fn [x] (* x x))
+
+# 简写形式（类似 Clojure 的 #()）
+|(* $ $)  # 等同于 (fn [x] (* x x))
+```
+
+### Common Lisp → Janet 对照表
+
+| 功能 | Common Lisp | Janet |
+|------|-------------|-------|
+| 定义变量 | `(defparameter x 10)` | `(def x 10)` |
+| 定义函数 | `(defun f (x) ...)` | `(defn f [x] ...)` |
+| Lambda | `(lambda (x) ...)` | `(fn [x] ...)` |
+| Let 绑定 | `(let ((x 1)) ...)` | `(let [x 1] ...)` |
+| 条件 | `(if ... ... ...)` | `(if ... ... ...)` |
+| 序列 | `(list 1 2 3)` | `[1 2 3]` 或 `'(1 2 3)` |
+| 关联数组 | `(make-hash-table)` | `{:key "value"}` |
+| 注释 | `;` | `#` |
+
+### Scheme → Janet 对照表
+
+| 功能 | Scheme | Janet |
+|------|--------|-------|
+| 定义 | `(define x 10)` | `(def x 10)` |
+| 函数 | `(define (f x) ...)` | `(defn f [x] ...)` |
+| Lambda | `(lambda (x) ...)` | `(fn [x] ...)` |
+| Let | `(let ((x 1)) ...)` | `(let [x 1] ...)` |
+| 向量 | `#(1 2 3)` | `[1 2 3]` |
+| 条件 | `(cond ...)` | `(cond ...)` |
+
+### Clojure → Janet 对照表
+
+| 功能 | Clojure | Janet |
+|------|---------|-------|
+| 定义 | `(def x 10)` | `(def x 10)` ✓ |
+| 函数 | `(defn f [x] ...)` | `(defn f [x] ...)` ✓ |
+| Lambda | `(fn [x] ...)` | `(fn [x] ...)` ✓ |
+| Let | `(let [x 1] ...)` | `(let [x 1] ...)` ✓ |
+| 向量 | `[1 2 3]` | `[1 2 3]` ✓ |
+| Map | `{:key "value"}` | `{:key "value"}` ✓ |
+| 关键字 | `:keyword` | `:keyword` ✓ |
+
+可以看到，Janet 的语法最接近 Clojure！
+
+## 1.5 核心概念预览
+
+### 不可变性 vs 可变性
+
+```janet
+# 不可变（默认）
+(def x [1 2 3])
+# (put x 0 999)  # 错误！元组是不可变的
+
+# 可变数组
+(def y @[1 2 3])
+(put y 0 999)
+y  # @[999 2 3]
+
+# 不可变结构体
+(def person {:name "Alice" :age 30})
+# (put person :age 31)  # 错误！
+
+# 可变表
+(def person-mut @{:name "Alice" :age 30})
+(put person-mut :age 31)  # OK
+```
+
+### 序列处理
+
+```janet
+# 类似 Clojure 的序列函数
+(map inc [1 2 3 4 5])  # @[2 3 4 5 6]
+(filter even? [1 2 3 4 5])  # @[2 4]
+(reduce + 0 [1 2 3 4 5])  # 15
+
+# 线程宏（Threading Macros）- 来自 Clojure
+(-> 5
+    (+ 3)
+    (* 2)
+    (- 1))  # 15
+
+(->> [1 2 3 4 5]
+     (map inc)
+     (filter even?)
+     (reduce + 0))  # 12
+```
+
+### 模式匹配
+
+```janet
+# Match 表达式（类似 ML 族语言）
+(defn describe [x]
+  (match x
+    0 "zero"
+    1 "one"
+    n (string "other: " n)))
+
+(describe 0)  # "zero"
+(describe 42)  # "other: 42"
+```
+
+## 1.6 开发工作流
+
+### REPL 驱动开发
+
+Janet 鼓励 REPL 驱动开发（类似 Common Lisp）：
+
+1. 在 REPL 中实验代码
+2. 将工作代码移到文件中
+3. 在 REPL 中重新加载模块
+4. 继续迭代
+
+```janet
+# 在 REPL 中加载文件
+(import ./mymodule)
+
+# 重新加载模块（开发时）
+(import ./mymodule :fresh true)
+```
+
+### 编辑器集成
+
+- **Emacs**: `janet-mode`
+- **Vim/Neovim**: `janet.vim`
+- **VS Code**: Janet 扩展
+- **Sublime Text**: Janet 语法高亮
+- **Atom**: `language-janet`
+
+### 项目结构
+
+```
+my-project/
+├── project.janet      # 项目配置（类似 Clojure 的 project.clj）
+├── src/
+│   └── mymodule.janet
+├── test/
+│   └── mymodule-test.janet
+└── README.md
+```
+
+## 1.7 常用工具
+
+### JPM - Janet Project Manager
+
+JPM 是 Janet 的包管理器（类似 npm、pip）：
+
+```bash
+# 初始化新项目
+jpm init
+
+# 安装依赖
+jpm deps
+
+# 构建项目
+jpm build
+
+# 运行测试
+jpm test
+
+# 安装包
+jpm install spork  # Janet 的标准扩展库
+
+# 清理
+jpm clean
+```
+
+### 调试
+
+```janet
+# 打印调试
+(print "Debug: " x)
+(pp x)  # 美化打印
+
+# 断言
+(assert (= (+ 1 1) 2) "Math is broken!")
+
+# 错误处理
+(try
+  (/ 1 0)
+  ([err]
+   (print "Error: " err)))
+
+# 追踪
+(debug/stack)  # 打印调用栈
+```
+
+## 1.8 实践练习
+
+### 练习 1：FizzBuzz
+
+实现经典的 FizzBuzz 问题：
+
+```janet
+# 你的实现
+(defn fizzbuzz [n]
+  # TODO
+  )
+
+# 测试
+(fizzbuzz 15)
+# 应该打印：
+# 1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz
+```
+
+<details>
+<summary>参考答案</summary>
+
+```janet
+(defn fizzbuzz [n]
+  (each i (range 1 (inc n))
+    (cond
+      (zero? (mod i 15)) (print "FizzBuzz")
+      (zero? (mod i 3)) (print "Fizz")
+      (zero? (mod i 5)) (print "Buzz")
+      (print i))))
+```
+</details>
+
+### 练习 2：列表处理
+
+```janet
+# 实现一个函数，返回列表中的偶数平方
+(defn even-squares [lst]
+  # TODO
+  )
+
+# 测试
+(even-squares [1 2 3 4 5 6])  # 应该返回 @[4 16 36]
+```
+
+<details>
+<summary>参考答案</summary>
+
+```janet
+(defn even-squares [lst]
+  (->> lst
+       (filter even?)
+       (map |(* $ $))))
+```
+</details>
+
+### 练习 3：递归与累加器
+
+```janet
+# 实现阶乘函数（两种方式）
+(defn factorial-recursive [n]
+  # 简单递归
+  )
+
+(defn factorial-tail [n]
+  # 尾递归优化版本
+  )
+
+# 测试
+(factorial-recursive 5)  # 120
+(factorial-tail 5)       # 120
+```
+
+## 1.9 与其他 Lisp 的心智模型转换
+
+### 从 Common Lisp 过来
+
+- **包系统**: Janet 没有 CL 那样复杂的包系统，模块更简单
+- **CLOS**: Janet 没有对象系统，使用函数式方法
+- **宏**: Janet 的宏类似但更简单，默认是卫生宏
+- **多值返回**: 使用元组代替
+- **条件系统**: Janet 使用更简单的 try/catch
+
+### 从 Scheme 过来
+
+- **Continuations**: Janet 使用 fibers（协程）而不是 call/cc
+- **尾调用**: Janet 同样有尾调用优化
+- **宏**: Janet 的宏系统更接近 syntax-rules
+- **模块**: 更现代化的模块系统
+
+### 从 Clojure 过来
+
+- **JVM**: Janet 是原生执行，无 JVM 开销
+- **语法**: 几乎相同！
+- **不可变性**: 两者都默认不可变
+- **并发**: Fibers vs Agents/Atoms/STM
+- **Java 互操作**: Janet 使用 FFI 与 C 互操作
+
+## 1.10 下一步
+
+现在你已经：
+- ✓ 安装了 Janet
+- ✓ 熟悉了 REPL
+- ✓ 了解了基本语法
+- ✓ 知道了与其他 Lisp 的区别
+
+继续前往 [第二章：核心语言特性](./02-core-language.md)，深入了解 Janet 的语言核心。
+
+---
+
+← [返回目录](./README.md) | [下一章：核心语言特性](./02-core-language.md) →

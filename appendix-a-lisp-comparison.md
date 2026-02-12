@@ -1,0 +1,593 @@
+# 附录 A：与其他 Lisp 的详细对比
+
+本附录详细对比 Janet 与其他主流 Lisp 方言，帮助你快速理解差异和相似之处。
+
+## A.1 Janet vs Common Lisp
+
+### A.1.1 语法差异
+
+| 特性 | Common Lisp | Janet |
+|------|-------------|-------|
+| 注释 | `;` | `#` |
+| 向量 | `#(1 2 3)` | `[1 2 3]` |
+| 字符 | `#\a` | (无单独类型) |
+| 关键字 | `:key` | `:key` |
+| 布尔值 | `t` / `nil` | `true` / `false` / `nil` |
+| 函数定义 | `(defun f (x) ...)` | `(defn f [x] ...)` |
+| Lambda | `(lambda (x) ...)` | `(fn [x] ...)` |
+| Let | `(let ((x 1)) ...)` | `(let [x 1] ...)` |
+
+### A.1.2 命名空间
+
+```lisp
+; Common Lisp - 两个命名空间
+(defun foo () 42)
+(let ((foo 10))
+  (foo))  ; 调用函数，返回 42
+
+(let ((foo 10))
+  foo)    ; 访问变量，返回 10
+```
+
+```janet
+# Janet - 单一命名空间（类似 Scheme）
+(defn foo [] 42)
+(let [foo 10]
+  (foo))  # 错误！foo 是数字
+```
+
+### A.1.3 类型系统
+
+```lisp
+; Common Lisp - 丰富的数字类型
+42          ; fixnum
+10000000000 ; bignum
+22/7        ; ratio
+#C(1 2)     ; complex
+
+(+ 1/2 1/3) ; => 5/6 (保持有理数)
+```
+
+```janet
+# Janet - 单一数字类型（双精度浮点）
+42
+10000000000
+(/ 22 7)    # => 3.142857... (浮点)
+```
+
+### A.1.4 宏系统
+
+```lisp
+; Common Lisp - 强大的宏系统
+(defmacro when (condition &body body)
+  `(if ,condition
+       (progn ,@body)))
+
+; 宏展开
+(macroexpand-1 '(when (> x 0) (print x)))
+```
+
+```janet
+# Janet - 类似但更简单
+(defmacro when [condition & body]
+  ~(if ,condition
+       (do ,;body)))
+
+# 宏展开
+(macex1 '(when (> x 0) (print x)))
+```
+
+### A.1.5 CLOS vs 无对象系统
+
+```lisp
+; Common Lisp - CLOS
+(defclass point ()
+  ((x :initarg :x :accessor point-x)
+   (y :initarg :y :accessor point-y)))
+
+(defmethod distance ((p point))
+  (sqrt (+ (* (point-x p) (point-x p))
+           (* (point-y p) (point-y p)))))
+```
+
+```janet
+# Janet - 函数式方法
+(defn make-point [x y]
+  {:x x :y y})
+
+(defn distance [p]
+  (math/sqrt (+ (* (p :x) (p :x))
+                (* (p :y) (p :y)))))
+```
+
+### A.1.6 错误处理
+
+```lisp
+; Common Lisp - 条件系统
+(handler-case
+    (/ 1 0)
+  (division-by-zero ()
+    :handled)
+  (error (e)
+    (format t "Error: ~A" e)))
+
+; 重启
+(restart-case
+    (error "Something wrong")
+  (use-value (value)
+    value))
+```
+
+```janet
+# Janet - 简单的 try/catch
+(try
+  (/ 1 0)
+  ([err]
+   (print "Error: " err)))
+
+# 没有内置的重启机制
+```
+
+### A.1.7 并发模型
+
+```lisp
+; Common Lisp - 取决于实现
+; SBCL: 原生线程
+(sb-thread:make-thread
+  (lambda () (print "Hello")))
+
+; Bordeaux Threads (可移植)
+(bt:make-thread
+  (lambda () (print "Hello")))
+```
+
+```janet
+# Janet - Fibers（协程）
+(def f (fiber/new
+        (fn [] (print "Hello"))))
+(resume f)
+```
+
+## A.2 Janet vs Scheme
+
+### A.2.1 语法相似性
+
+Scheme 和 Janet 的语法更相似：
+
+```scheme
+; Scheme
+(define x 10)
+(define (square x) (* x x))
+(let ((x 1) (y 2)) (+ x y))
+```
+
+```janet
+# Janet
+(def x 10)
+(defn square [x] (* x x))
+(let [x 1 y 2] (+ x y))
+```
+
+### A.2.2 尾调用优化
+
+两者都支持尾调用优化：
+
+```scheme
+; Scheme
+(define (factorial n acc)
+  (if (<= n 1)
+      acc
+      (factorial (- n 1) (* n acc))))
+```
+
+```janet
+# Janet
+(defn factorial [n acc]
+  (if (<= n 1)
+    acc
+    (factorial (- n 1) (* n acc))))
+```
+
+### A.2.3 Continuation vs Fibers
+
+```scheme
+; Scheme - call/cc
+(define (generator)
+  (let ((state 0))
+    (lambda ()
+      (call/cc
+       (lambda (k)
+         (set! state (+ state 1))
+         state)))))
+```
+
+```janet
+# Janet - Fibers
+(defn generator []
+  (var state 0)
+  (fiber/new
+   (fn []
+     (while true
+       (set state (inc state))
+       (yield state)))))
+```
+
+### A.2.4 卫生宏
+
+```scheme
+; Scheme - syntax-rules (卫生宏)
+(define-syntax when
+  (syntax-rules ()
+    ((when condition body ...)
+     (if condition
+         (begin body ...)))))
+```
+
+```janet
+# Janet - 默认卫生宏
+(defmacro when [condition & body]
+  ~(if ,condition
+       (do ,;body)))
+```
+
+### A.2.5 数字塔
+
+```scheme
+; Scheme - 完整的数字塔
+42          ; exact integer
+3.14        ; inexact real
+22/7        ; exact rational
+1+2i        ; complex
+
+(exact? 42)  ; #t
+(exact? 3.14) ; #f
+```
+
+```janet
+# Janet - 简化的数字系统
+42
+3.14
+# 无有理数和复数支持
+```
+
+## A.3 Janet vs Clojure
+
+### A.3.1 语法高度相似
+
+Janet 的语法最接近 Clojure：
+
+```clojure
+; Clojure
+(def x 10)
+(defn square [x] (* x x))
+(let [x 1 y 2] (+ x y))
+{:name "Alice" :age 30}
+[:a :b :c]
+```
+
+```janet
+# Janet - 几乎相同！
+(def x 10)
+(defn square [x] (* x x))
+(let [x 1 y 2] (+ x y))
+{:name "Alice" :age 30}
+[:a :b :c]
+```
+
+### A.3.2 不可变性
+
+```clojure
+; Clojure - 默认不可变
+(def v [1 2 3])
+(conj v 4)  ; 返回新向量 [1 2 3 4]
+v           ; 仍是 [1 2 3]
+```
+
+```janet
+# Janet - 显式区分
+(def v [1 2 3])      # 不可变元组
+# (put v 0 99)       # 错误
+
+(def v @[1 2 3])     # 可变数组
+(put v 0 99)         # OK
+```
+
+### A.3.3 持久化数据结构
+
+```clojure
+; Clojure - 高效的持久化数据结构
+(def v1 (vec (range 1000000)))
+(def v2 (assoc v1 500000 :new))
+; v2 与 v1 共享大部分结构
+```
+
+```janet
+# Janet - 简单复制
+(def v1 (seq [i :range [0 1000000]] i))
+(def v2 (array ;v1))
+(put v2 500000 :new)
+# v2 是完全独立的副本
+```
+
+### A.3.4 并发模型
+
+```clojure
+; Clojure - 多种并发原语
+; Atoms
+(def counter (atom 0))
+(swap! counter inc)
+
+; Refs (STM)
+(def account (ref 1000))
+(dosync
+  (alter account + 100))
+
+; Agents
+(def logger (agent []))
+(send logger conj "log entry")
+```
+
+```janet
+# Janet - Fibers
+(var counter 0)
+(def f (fiber/new
+        (fn []
+          (set counter (inc counter)))))
+(resume f)
+```
+
+### A.3.5 Java 互操作 vs C FFI
+
+```clojure
+; Clojure - Java 互操作
+(import java.util.Date)
+(def now (Date.))
+(.toString now)
+
+; 调用静态方法
+(Math/sqrt 16)
+```
+
+```janet
+# Janet - C FFI
+(ffi/native)
+(ffi/defbind sqrt :double [x :double])
+(sqrt 16)
+```
+
+### A.3.6 线程宏
+
+两者都支持线程宏：
+
+```clojure
+; Clojure
+(-> 5
+    (+ 3)
+    (* 2)
+    (- 1))  ; => 15
+
+(->> [1 2 3 4]
+     (map inc)
+     (filter even?))
+```
+
+```janet
+# Janet
+(-> 5
+    (+ 3)
+    (* 2)
+    (- 1))  # => 15
+
+(->> [1 2 3 4]
+     (map inc)
+     (filter even?))
+```
+
+## A.4 性能对比
+
+### A.4.1 启动时间
+
+| Lisp | 启动时间 |
+|------|---------|
+| Janet | ~5ms |
+| Scheme (Chicken) | ~10ms |
+| Common Lisp (SBCL) | ~50ms |
+| Clojure | ~2000ms (JVM) |
+
+```bash
+# 测试
+time janet -e '(print "Hello")'
+time csi -e '(print "Hello")'
+time sbcl --eval '(print "Hello")' --quit
+time clojure -e '(println "Hello")'
+```
+
+### A.4.2 运行时大小
+
+| Lisp | 运行时大小 |
+|------|-----------|
+| Janet | ~800KB |
+| Scheme (Chicken) | ~5MB |
+| Common Lisp (SBCL) | ~50MB |
+| Clojure | ~100MB (含 JVM) |
+
+### A.4.3 性能基准
+
+简单循环测试（1 亿次迭代）：
+
+```janet
+# Janet
+(defn test-loop []
+  (var sum 0)
+  (for i 0 100000000
+    (set sum (+ sum i))))
+
+(benchmark test-loop)
+# 约 2-3 秒
+```
+
+```lisp
+; SBCL (编译后)
+(defun test-loop ()
+  (let ((sum 0))
+    (loop for i from 0 below 100000000
+          do (incf sum i))
+    sum))
+
+; 约 0.1-0.2 秒（快很多！）
+```
+
+## A.5 生态系统对比
+
+### A.5.1 包管理
+
+| Lisp | 包管理器 | 仓库 |
+|------|---------|------|
+| Common Lisp | Quicklisp | ~2000 包 |
+| Scheme | 多种 | 分散 |
+| Clojure | Leiningen/deps | Clojars (~30000) |
+| Janet | JPM | ~200 包 |
+
+### A.5.2 标准库
+
+| 特性 | CL | Scheme | Clojure | Janet |
+|------|----|----|---------|-------|
+| 字符串 | 丰富 | 基础 | 丰富 | 丰富 |
+| 集合 | 丰富 | 基础 | 极其丰富 | 丰富 |
+| I/O | 完整 | 基础 | 丰富 | 完整 |
+| 网络 | 需库 | 需库 | 需库 | 内置 |
+| FFI | CFFI | 实现相关 | JNI/JNA | 内置 |
+| 正则 | 需库 | 需库 | Java | PEG |
+
+### A.5.3 工具链
+
+| Lisp | REPL | 调试器 | 分析器 | IDE |
+|------|------|--------|--------|-----|
+| Common Lisp | ✓✓✓ | ✓✓✓ | ✓✓ | Emacs/SLIME |
+| Scheme | ✓✓ | ✓ | ✓ | 多种 |
+| Clojure | ✓✓✓ | ✓✓ | ✓✓✓ | IntelliJ/Cursive |
+| Janet | ✓✓ | ✓ | ✓ | 多种编辑器 |
+
+## A.6 适用场景
+
+### A.6.1 Common Lisp
+
+**最适合：**
+- 大型、长期维护的项目
+- 需要极强的运行时反射能力
+- 对象系统（CLOS）是核心需求
+- 商业应用
+
+**不适合：**
+- 嵌入式场景
+- 需要快速启动
+- 资源受限环境
+
+### A.6.2 Scheme
+
+**最适合：**
+- 教学和学习
+- 小型工具和脚本
+- 嵌入式脚本（Guile）
+- 语言研究
+
+**不适合：**
+- 大型应用（生态系统碎片化）
+- 需要丰富的标准库
+- 商业支持
+
+### A.6.3 Clojure
+
+**最适合：**
+- 数据处理和分析
+- Web 应用
+- 并发和分布式系统
+- 企业应用（有 JVM 生态）
+
+**不适合：**
+- 需要快速启动（如 CLI 工具）
+- 资源受限环境
+- 系统级编程
+
+### A.6.4 Janet
+
+**最适合：**
+- 系统脚本和工具
+- 嵌入式脚本
+- 网络服务
+- 快速原型
+- 资源受限环境
+
+**不适合：**
+- 需要极致性能（用 C/Rust）
+- 需要丰富的第三方库
+- 大型企业应用
+
+## A.7 迁移指南
+
+### A.7.1 从 Common Lisp
+
+关键差异：
+1. 单一命名空间
+2. 无 CLOS
+3. 简化的错误处理
+4. 不同的包系统
+
+迁移策略：
+- 用函数和闭包代替对象
+- 用数据结构代替类层次
+- 简化错误处理逻辑
+
+### A.7.2 从 Scheme
+
+关键差异：
+1. 语法更接近 Clojure
+2. Fibers 代替 call/cc
+3. 更丰富的标准库
+
+迁移策略：
+- 重写 continuation 代码为 fibers
+- 利用内置的网络和 PEG
+- 使用 JPM 管理包
+
+### A.7.3 从 Clojure
+
+关键差异：
+1. 非持久化数据结构
+2. 显式的可变性
+3. 没有 JVM 互操作
+4. Fibers 代替 core.async
+
+迁移策略：
+- 语法几乎不用改
+- 注意可变/不可变的区别
+- 用 FFI 代替 Java 互操作
+- 重构并发代码
+
+## A.8 总结
+
+### Janet 的定位
+
+Janet 是：
+- **Lisp 家族**的现代成员
+- **Clojure 语法**的轻量级实现
+- **Lua 定位**的 Lisp 版本
+- **系统编程**的函数式选择
+
+### 选择建议
+
+选择 Janet 如果你：
+- ✓ 需要轻量级的 Lisp
+- ✓ 想要快速启动
+- ✓ 进行系统级编程
+- ✓ 需要嵌入式脚本
+- ✓ 喜欢 Clojure 但不想用 JVM
+
+选择其他 Lisp 如果你：
+- Common Lisp: 需要 CLOS 和强大的运行时
+- Scheme: 教学或学习 Lisp
+- Clojure: JVM 生态和企业应用
+
+---
+
+← [上一章：实战项目](./14-practical-projects.md) | [返回目录](./README.md) | [附录 B：核心 API 速查](./appendix-b-api-reference.md) →

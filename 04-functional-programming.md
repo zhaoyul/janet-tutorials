@@ -1,0 +1,431 @@
+# 第四章：函数式编程
+
+Janet 是一门函数式语言，函数是一等公民。本章深入探讨函数式编程技术。
+
+## 4.1 函数基础
+
+### 定义函数
+
+```janet
+# defn - 命名函数
+(defn add [x y]
+  (+ x y))
+
+# fn - 匿名函数
+(fn [x] (* x x))
+
+# 短函数语法（管道）
+|(* $ $)        # 单参数
+|($0 $1)        # 多参数，$0 $1 $2...
+
+# 使用示例
+(map |(+ $ 1) [1 2 3])  # => @[2 3 4]
+```
+
+### 函数参数
+
+```janet
+# 固定参数
+(defn greet [name] (string "Hello, " name))
+
+# 可变参数
+(defn sum [& numbers] (reduce + 0 numbers))
+
+# 可选参数
+(defn power [base &opt exp]
+  (default exp 2)
+  (math/pow base exp))
+
+# 解构参数
+(defn point-distance [[x1 y1] [x2 y2]]
+  (math/sqrt (+ (math/pow (- x2 x1) 2)
+                (math/pow (- y2 y1) 2))))
+```
+
+## 4.2 高阶函数
+
+### Map, Filter, Reduce
+
+```janet
+# map - 转换
+(map inc [1 2 3 4])  # => @[2 3 4 5]
+(map + [1 2 3] [4 5 6])  # => @[5 7 9]
+
+# filter - 过滤
+(filter even? [1 2 3 4 5])  # => @[2 4]
+(filter |(> $ 0) [-1 0 1 2])  # => @[1 2]
+
+# reduce - 归约
+(reduce + 0 [1 2 3 4])  # => 10
+(reduce * 1 [1 2 3 4])  # => 24
+
+# 自定义 reduce
+(reduce
+  (fn [acc x] (put acc x true))
+  @{}
+  [:a :b :c])  # => @{:a true :b true :c true}
+```
+
+### 函数组合
+
+```janet
+# comp - 函数组合
+(def add1-then-square (comp |(* $ $) inc))
+(add1-then-square 4)  # => 25
+
+# 自己实现
+(defn compose [& fns]
+  (fn [x]
+    (reduce (fn [acc f] (f acc))
+            x
+            (reverse fns))))
+
+# 管道 - 更清晰
+(-> 4 inc (* $ $))  # => 25
+```
+
+### 部分应用与柯里化
+
+```janet
+# 部分应用
+(def add5 (partial + 5))
+(add5 3)  # => 8
+
+# 柯里化
+(defn curry [f]
+  (fn [x]
+    (fn [y]
+      (f x y))))
+
+(def curried-add (curry +))
+((curried-add 5) 3)  # => 8
+
+# 实用例子
+(def multiply-by (fn [n] (partial * n)))
+(def double (multiply-by 2))
+(double 5)  # => 10
+```
+
+## 4.3 惰性求值
+
+### 生成器
+
+```janet
+# 无限序列
+(defn naturals []
+  (generate [n 0]
+    (do
+      (yield n)
+      (set n (inc n)))))
+
+(take 10 (naturals))  # => @[0 1 2 3 4 5 6 7 8 9]
+
+# 斐波那契
+(defn fibonacci []
+  (generate [a 0 b 1]
+    (do
+      (yield a)
+      (def temp b)
+      (set b (+ a b))
+      (set a temp))))
+
+# 素数筛
+(defn primes []
+  (generate [n 2 composites @{}]
+    (when (not (composites n))
+      (yield n)
+      (var k (* n n))
+      (while (< k (+ n 10000))
+        (put composites k true)
+        (set k (+ k n))))
+    (set n (inc n))))
+
+(take 20 (primes))  # 前20个素数
+```
+
+### 惰性序列操作
+
+```janet
+# take-while - 取直到条件不满足
+(take-while |(< $ 100) (naturals))
+
+# drop-while - 跳过直到条件不满足
+(drop-while |(< $ 10) (naturals))
+
+# 组合
+(->> (naturals)
+     (filter |(zero? (mod $ 2)))  # 偶数
+     (take 10))  # 前10个
+```
+
+## 4.4 递归与尾调用优化
+
+### 普通递归
+
+```janet
+# 阶乘
+(defn factorial [n]
+  (if (<= n 1)
+    1
+    (* n (factorial (- n 1)))))
+
+# 问题：深度递归会栈溢出
+# (factorial 10000)  # 可能溢出
+```
+
+### 尾递归
+
+```janet
+# 尾递归优化
+(defn factorial-tail [n &opt acc]
+  (default acc 1)
+  (if (<= n 1)
+    acc
+    (factorial-tail (- n 1) (* n acc))))
+
+# 深度递归也没问题
+(factorial-tail 10000)  # OK!
+
+# 列表反转（尾递归）
+(defn reverse-list [lst &opt acc]
+  (default acc [])
+  (if (empty? lst)
+    acc
+    (reverse-list (slice lst 1)
+                  (tuple (first lst) ;acc))))
+```
+
+### 相互递归
+
+```janet
+(defn even? [n]
+  (if (zero? n)
+    true
+    (odd? (- n 1))))
+
+(defn odd? [n]
+  (if (zero? n)
+    false
+    (even? (- n 1))))
+
+(even? 100)  # => true
+(odd? 99)    # => true
+```
+
+## 4.5 函数式数据转换
+
+### 链式操作
+
+```janet
+# 处理用户数据
+(def users
+  [{:name "Alice" :age 30 :active true}
+   {:name "Bob" :age 25 :active false}
+   {:name "Charlie" :age 35 :active true}])
+
+# 获取活跃用户的名字
+(->> users
+     (filter |($ :active))
+     (map |($ :name))
+     (sorted))
+# => @["Alice" "Charlie"]
+
+# 按年龄分组
+(defn group-by [f coll]
+  (reduce
+    (fn [acc x]
+      (def key (f x))
+      (put acc key (array/push (get acc key @[]) x)))
+    @{}
+    coll))
+
+(group-by |(if (>= ($ :age) 30) :senior :junior) users)
+```
+
+### 树形数据处理
+
+```janet
+(def tree
+  {:value 1
+   :children [{:value 2 :children []}
+              {:value 3 :children [{:value 4 :children []}]}]})
+
+# 深度优先遍历
+(defn dfs [tree f]
+  (f (tree :value))
+  (each child (tree :children)
+    (dfs child f)))
+
+(dfs tree print)  # 输出: 1 2 3 4
+
+# Map over tree
+(defn map-tree [f tree]
+  {:value (f (tree :value))
+   :children (map |(map-tree f $) (tree :children))})
+
+(map-tree |(* $ 2) tree)  # 所有值翻倍
+```
+
+## 4.6 函数式模式
+
+### Monad 风格（Maybe）
+
+```janet
+# Maybe monad 模式
+(defn maybe [value]
+  {:type :maybe :value value})
+
+(defn nothing []
+  {:type :nothing})
+
+(defn maybe? [m]
+  (= (m :type) :maybe))
+
+(defn bind [m f]
+  (if (maybe? m)
+    (f (m :value))
+    m))
+
+# 使用
+(defn safe-div [a b]
+  (if (zero? b)
+    (nothing)
+    (maybe (/ a b))))
+
+(-> (safe-div 10 2)
+    (bind |(maybe (* $ 3)))
+    (bind |(maybe (+ $ 1))))
+```
+
+### Lens 模式
+
+```janet
+(defn get-in [data path]
+  (reduce (fn [acc key] (get acc key)) data path))
+
+(defn update-in [data path f]
+  (if (empty? path)
+    (f data)
+    (let [key (first path)
+          rest (slice path 1)
+          val (get data key)]
+      (put data key (update-in val rest f)))))
+
+# 使用
+(def data @{:user @{:profile @{:name "Alice"}}})
+(update-in data [:user :profile :name] string/upper)
+# => @{:user @{:profile @{:name "ALICE"}}}
+```
+
+## 4.7 性能考虑
+
+### 尾调用优化验证
+
+```janet
+# 测试栈深度
+(defn deep-recursion [n]
+  (if (zero? n)
+    :done
+    (deep-recursion (- n 1))))
+
+(deep-recursion 100000)  # OK (尾递归)
+
+# 非尾递归
+(defn non-tail [n]
+  (if (zero? n)
+    0
+    (+ 1 (non-tail (- n 1)))))
+
+# (non-tail 100000)  # 可能栈溢出
+```
+
+### 避免不必要的序列生成
+
+```janet
+# 低效：生成完整序列
+(length (map inc (range 1000000)))
+
+# 高效：使用 loop
+(var count 0)
+(loop [i :range [0 1000000]]
+  (++ count))
+```
+
+## 4.8 实践练习
+
+### 练习 1：实现 fold
+
+```janet
+(defn fold-left [f acc coll]
+  # TODO: 左折叠
+  )
+
+(defn fold-right [f acc coll]
+  # TODO: 右折叠
+  )
+
+(fold-left - 0 [1 2 3])   # => (((0-1)-2)-3) = -6
+(fold-right - 0 [1 2 3])  # => (1-(2-(3-0))) = 2
+```
+
+### 练习 2：惰性过滤
+
+```janet
+(defn lazy-filter [pred gen]
+  # TODO: 返回过滤后的生成器
+  )
+
+# 测试
+(take 10 (lazy-filter even? (naturals)))
+```
+
+### 练习 3：Y Combinator
+
+```janet
+(def Y
+  # TODO: 实现 Y combinator
+  )
+
+# 使用 Y combinator 实现阶乘
+(def factorial
+  (Y (fn [f]
+       (fn [n]
+         (if (<= n 1)
+           1
+           (* n (f (- n 1))))))))
+```
+
+<details>
+<summary>参考答案</summary>
+
+```janet
+(def Y
+  (fn [f]
+    ((fn [x] (f (fn [& args] (apply (x x) args))))
+     (fn [x] (f (fn [& args] (apply (x x) args)))))))
+```
+</details>
+
+## 4.9 总结
+
+本章学习了：
+
+- ✓ 函数定义与参数处理
+- ✓ 高阶函数（map, filter, reduce）
+- ✓ 函数组合与柯里化
+- ✓ 惰性求值与生成器
+- ✓ 递归与尾调用优化
+- ✓ 函数式数据转换模式
+- ✓ 性能考虑
+
+### 关键要点
+
+1. **函数是一等公民** - 可以传递、返回、组合
+2. **尾调用优化** - 支持深度递归
+3. **惰性求值** - 通过生成器实现
+4. **不可变性优先** - 函数式风格
+5. **组合大于继承** - 通过函数组合构建复杂逻辑
+
+---
+
+← [上一章：数据结构](./03-data-structures.md) | [返回目录](./README.md) | [下一章：宏与元编程](./05-macros-metaprogramming.md) →
