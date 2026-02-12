@@ -649,4 +649,4 @@ systemctl start sysmon
 
 ---
 
-← [上一章：测试与调试](./13-testing-debugging.md) | [返回目录](./README.md) | [附录 A：与其他 Lisp 的详细对比](./appendix-a-lisp-comparison.md) →
+← [上一章：测试与调试](./13-testing-debugging.md) | [返回目录](./README.md) | [下一章：Spork 扩展标准库](./15-spork-library.md) →

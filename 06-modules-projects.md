@@ -233,6 +233,8 @@ my-project/
 (temple/render "Hello {{ name }}" {:name "World"})
 ```
 
+想系统了解 Spork 的模块地图、安装方式和最佳实践，请参见 [第十五章：Spork 扩展标准库](./15-spork-library.md)。
+
 ### 其他有用的库
 
 ```janet
