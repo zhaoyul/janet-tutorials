@@ -1,0 +1,732 @@
+# 第十章：系统编程
+
+Janet 作为系统级语言，提供了丰富的系统编程能力。本章介绍文件系统、进程管理、信号处理等系统级编程技术。
+
+## 10.1 文件系统操作
+
+### 文件读写
+
+```janet
+# 读取整个文件
+(def content (slurp "file.txt"))
+
+# 写入文件
+(spit "output.txt" "Hello, World!")
+
+# 追加文件
+(spit "log.txt" "New entry\n" :append)
+
+# 二进制模式
+(def data (slurp "image.png" :binary))
+(spit "copy.png" data :binary)
+```
+
+### 文件对象操作
+
+```janet
+# 打开文件
+(def f (file/open "data.txt" :read))
+
+# 读取行
+(defn read-lines [f]
+  (def lines @[])
+  (while (def line (file/read f :line))
+    (array/push lines line))
+  lines)
+
+# 使用 defer 确保关闭
+(def f (file/open "data.txt" :read))
+(defer (file/close f)
+  (each line (read-lines f)
+    (print line)))
+
+# 写入文件
+(def f (file/open "output.txt" :write))
+(defer (file/close f)
+  (file/write f "Line 1\n")
+  (file/write f "Line 2\n"))
+```
+
+### 文件信息
+
+```janet
+# 检查文件是否存在
+(os/stat "file.txt")  # 存在返回信息，不存在返回 nil
+
+# 文件信息
+(def info (os/stat "file.txt"))
+(pp info)
+# {:mode 33188 :size 1024 :mtime 1234567890 ...}
+
+# 文件大小
+(def size (info :size))
+
+# 修改时间
+(def mtime (info :mtime))
+
+# 检查是否是目录
+(defn directory? [path]
+  (when-let [info (os/stat path)]
+    (= (info :mode) :directory)))
+
+# 检查是否是文件
+(defn file? [path]
+  (when-let [info (os/stat path)]
+    (= (info :mode) :file)))
+```
+
+### 目录操作
+
+```janet
+# 列出目录内容
+(def files (os/dir "."))
+(pp files)
+
+# 递归列出所有文件
+(defn list-files-recursive [dir]
+  (def result @[])
+  (each item (os/dir dir)
+    (def path (string dir "/" item))
+    (if (directory? path)
+      (array/concat result (list-files-recursive path))
+      (array/push result path)))
+  result)
+
+# 创建目录
+(os/mkdir "newdir")
+
+# 递归创建目录
+(os/mkdir "path/to/newdir" :recursive)
+
+# 删除目录
+(os/rmdir "emptydir")
+
+# 改变工作目录
+(os/cd "/tmp")
+
+# 获取当前目录
+(def cwd (os/cwd))
+```
+
+### 路径操作
+
+```janet
+# 连接路径
+(defn join-path [& parts]
+  (string/join parts "/"))
+
+(join-path "/home" "user" "file.txt")  # => "/home/user/file.txt"
+
+# 获取目录名
+(defn dirname [path]
+  (def idx (string/find-all "/" path))
+  (if (empty? idx)
+    "."
+    (string/slice path 0 (last idx))))
+
+# 获取文件名
+(defn basename [path]
+  (def idx (string/find-all "/" path))
+  (if (empty? idx)
+    path
+    (string/slice path (inc (last idx)))))
+
+# 获取扩展名
+(defn extname [path]
+  (def idx (string/rfind "." path))
+  (if idx
+    (string/slice path idx)
+    ""))
+
+# 示例
+(dirname "/home/user/file.txt")   # => "/home/user"
+(basename "/home/user/file.txt")  # => "file.txt"
+(extname "/home/user/file.txt")   # => ".txt"
+```
+
+## 10.2 进程管理
+
+### 执行外部命令
+
+```janet
+# 执行命令并等待
+(os/execute ["ls" "-la"] :p)
+
+# 捕获输出
+(def result (os/execute ["echo" "Hello"] :p))
+(print "Exit code: " result)
+
+# 使用 sh 执行 shell 命令
+(os/shell "ls -la | grep .janet")
+```
+
+### 进程控制
+
+```janet
+# 创建子进程
+(def proc (os/spawn ["sleep" "10"] :p))
+
+# 等待进程完成
+(os/proc-wait proc)
+
+# 杀死进程
+(os/proc-kill proc)
+
+# 检查进程状态
+(def status (os/proc-wait proc :no-hang))
+```
+
+### 管道和重定向
+
+```janet
+# 标准输入/输出重定向
+(def proc (os/spawn ["cat"]
+                    :in :pipe
+                    :out :pipe))
+
+# 写入标准输入
+(def stdin (:in proc))
+(file/write stdin "Hello from Janet\n")
+(file/close stdin)
+
+# 读取标准输出
+(def stdout (:out proc))
+(def output (file/read stdout :all))
+(file/close stdout)
+
+(print "Output: " output)
+(os/proc-wait proc)
+```
+
+### 实战：命令管道
+
+```janet
+(defn pipeline [& commands]
+  # 实现类似 Unix pipeline 的功能
+  (var prev-proc nil)
+  (var prev-out nil)
+  
+  (each [i cmd] (pairs commands)
+    (def is-first (zero? i))
+    (def is-last (= i (dec (length commands))))
+    
+    (def opts @{})
+    (when (not is-first)
+      (put opts :in prev-out))
+    (when (not is-last)
+      (put opts :out :pipe))
+    
+    (def proc (os/spawn cmd ;(kvs opts)))
+    
+    (when prev-out
+      (file/close prev-out))
+    
+    (when (not is-last)
+      (set prev-out (:out proc)))
+    
+    (set prev-proc proc))
+  
+  # 等待最后一个进程
+  (os/proc-wait prev-proc))
+
+# 使用：等价于 ls | grep janet | wc -l
+(pipeline
+  ["ls"]
+  ["grep" "janet"]
+  ["wc" "-l"])
+```
+
+## 10.3 环境变量
+
+### 读取环境变量
+
+```janet
+# 获取单个环境变量
+(os/getenv "HOME")
+(os/getenv "PATH")
+(os/getenv "USER")
+
+# 带默认值
+(defn getenv [key &opt default]
+  (or (os/getenv key) default))
+
+(getenv "MY_VAR" "default-value")
+
+# 获取所有环境变量
+(def env (os/environ))
+(pp env)
+```
+
+### 设置环境变量
+
+```janet
+# 设置环境变量（仅对当前进程和子进程有效）
+(os/setenv "MY_VAR" "my-value")
+
+# 验证
+(print (os/getenv "MY_VAR"))  # => "my-value"
+
+# 子进程继承环境变量
+(os/spawn ["sh" "-c" "echo $MY_VAR"] :p)
+```
+
+## 10.4 信号处理
+
+### 基本信号处理
+
+```janet
+# 注册信号处理器
+(defn signal-handler [sig]
+  (print "Received signal: " sig)
+  (when (= sig :int)
+    (print "Interrupted! Cleaning up...")
+    (os/exit 0)))
+
+# 注册 SIGINT (Ctrl+C)
+(os/sigaction :int signal-handler)
+
+# 注册 SIGTERM
+(os/sigaction :term signal-handler)
+
+# 忽略信号
+(os/sigaction :int :ignore)
+
+# 恢复默认行为
+(os/sigaction :int :default)
+```
+
+### 优雅关闭
+
+```janet
+(var running true)
+
+(defn shutdown-handler [sig]
+  (print "\nShutdown signal received, cleaning up...")
+  (set running false))
+
+(os/sigaction :int shutdown-handler)
+(os/sigaction :term shutdown-handler)
+
+# 主循环
+(while running
+  (print "Working...")
+  (ev/sleep 1))
+
+(print "Cleanup complete, exiting.")
+```
+
+## 10.5 定时器和调度
+
+### 睡眠和延迟
+
+```janet
+# 睡眠（秒）
+(ev/sleep 1)      # 1 秒
+(ev/sleep 0.5)    # 0.5 秒
+
+# 使用 os/sleep（废弃，推荐使用 ev/sleep）
+# (os/sleep 1)
+```
+
+### 定时任务
+
+```janet
+# 简单的定时器
+(defn set-timeout [delay-sec f]
+  (fiber/new
+   (fn []
+     (ev/sleep delay-sec)
+     (f))))
+
+# 使用
+(def timer (set-timeout 2 (fn [] (print "Timeout!"))))
+(resume timer)
+
+# 周期性任务
+(defn set-interval [interval-sec f]
+  (fiber/new
+   (fn []
+     (while true
+       (f)
+       (ev/sleep interval-sec)))))
+
+# 使用
+(def interval (set-interval 1 (fn [] (print (os/time)))))
+(resume interval)
+```
+
+### 事件调度器
+
+```janet
+(defn make-scheduler []
+  (def tasks @[])
+  
+  @{:schedule
+    (fn [delay f]
+      (array/push tasks {:time (+ (os/time) delay) :fn f}))
+    
+    :run
+    (fn []
+      (while (> (length tasks) 0)
+        (def now (os/time))
+        (def ready @[])
+        (def pending @[])
+        
+        (each task tasks
+          (if (<= (task :time) now)
+            (array/push ready task)
+            (array/push pending task)))
+        
+        (set tasks pending)
+        
+        (each task ready
+          ((task :fn)))
+        
+        (ev/sleep 0.1)))})
+
+# 使用
+(def sched (make-scheduler))
+((sched :schedule) 2 (fn [] (print "Task 1")))
+((sched :schedule) 1 (fn [] (print "Task 2")))
+((sched :run))
+```
+
+## 10.6 系统信息
+
+### 平台信息
+
+```janet
+# 操作系统
+(os/which)  # => :linux, :macos, :windows, etc.
+
+# 检查平台
+(defn linux? [] (= (os/which) :linux))
+(defn macos? [] (= (os/which) :macos))
+(defn windows? [] (= (os/which) :windows))
+
+# CPU 信息（使用 FFI 或外部命令）
+(defn cpu-count []
+  (def output (os/execute ["nproc"] :px {:out :pipe}))
+  (scan-number (string/trim output)))
+```
+
+### 时间和日期
+
+```janet
+# 当前 Unix 时间戳
+(os/time)
+
+# 高精度时钟（纳秒）
+(os/clock)
+
+# 格式化日期
+(defn format-date [timestamp]
+  # 使用 os/date 获取日期表
+  (def d (os/date timestamp))
+  (string/format "%04d-%02d-%02d %02d:%02d:%02d"
+                 (d :year)
+                 (d :month)
+                 (d :month-day)
+                 (d :hours)
+                 (d :minutes)
+                 (d :seconds)))
+
+(format-date (os/time))
+# => "2024-02-12 10:30:45"
+```
+
+### 性能测量
+
+```janet
+(defn benchmark [f]
+  (def start (os/clock))
+  (f)
+  (def end (os/clock))
+  (- end start))
+
+# 使用
+(def elapsed
+  (benchmark
+   (fn []
+     (var sum 0)
+     (for i 0 1000000
+       (set sum (+ sum i))))))
+
+(printf "Elapsed: %.6f seconds" (/ elapsed 1e9))
+```
+
+## 10.7 日志系统
+
+### 简单日志
+
+```janet
+(defn log [level message]
+  (def timestamp (format-date (os/time)))
+  (printf "[%s] %s: %s" timestamp level message))
+
+(log "INFO" "Application started")
+(log "ERROR" "Something went wrong")
+```
+
+### 完整日志系统
+
+```janet
+(defn make-logger [path]
+  (def file (file/open path :append))
+  
+  @{:log
+    (fn [level message]
+      (def timestamp (format-date (os/time)))
+      (def line (string/format "[%s] %s: %s\n" timestamp level message))
+      (file/write file line)
+      (file/flush file))
+    
+    :info (fn [msg] ((self :log) "INFO" msg))
+    :warn (fn [msg] ((self :log) "WARN" msg))
+    :error (fn [msg] ((self :log) "ERROR" msg))
+    
+    :close (fn [] (file/close file))})
+
+# 使用
+(def logger (make-logger "app.log"))
+((logger :info) "Application started")
+((logger :error) "An error occurred")
+((logger :close))
+```
+
+## 10.8 实战：系统监控工具
+
+### CPU 使用率监控
+
+```janet
+(defn get-cpu-usage []
+  # 读取 /proc/stat (Linux)
+  (when (linux?)
+    (def stat (slurp "/proc/stat"))
+    (def line (first (string/split "\n" stat)))
+    (def parts (string/split " " line))
+    (def cpu-times (map scan-number (slice parts 2)))
+    
+    (def total (reduce + 0 cpu-times))
+    (def idle (get cpu-times 3))
+    (def busy (- total idle))
+    
+    {:total total :busy busy :idle idle}))
+
+(defn monitor-cpu [interval]
+  (var prev (get-cpu-usage))
+  (ev/sleep interval)
+  
+  (while true
+    (def curr (get-cpu-usage))
+    
+    (def total-diff (- (curr :total) (prev :total)))
+    (def busy-diff (- (curr :busy) (prev :busy)))
+    
+    (def usage (* 100 (/ busy-diff total-diff)))
+    (printf "CPU Usage: %.2f%%" usage)
+    
+    (set prev curr)
+    (ev/sleep interval)))
+
+# 运行
+# (monitor-cpu 1)
+```
+
+### 内存监控
+
+```janet
+(defn get-memory-info []
+  # 读取 /proc/meminfo (Linux)
+  (when (linux?)
+    (def info (slurp "/proc/meminfo"))
+    (def lines (string/split "\n" info))
+    
+    (def result @{})
+    (each line lines
+      (when-let [[key value] (string/split ":" line)]
+        (def num (scan-number (string/trim value)))
+        (put result (string/trim key) num)))
+    
+    result))
+
+(defn monitor-memory [interval]
+  (while true
+    (def info (get-memory-info))
+    (def total (get info "MemTotal"))
+    (def free (get info "MemFree"))
+    (def used (- total free))
+    (def usage (* 100 (/ used total)))
+    
+    (printf "Memory: %.2f%% (%d / %d KB)"
+            usage used total)
+    
+    (ev/sleep interval)))
+
+# 运行
+# (monitor-memory 2)
+```
+
+### 磁盘监控
+
+```janet
+(defn get-disk-usage [path]
+  # 使用 df 命令
+  (def output (os/execute ["df" "-k" path] :px {:out :pipe}))
+  (def lines (string/split "\n" output))
+  (when (> (length lines) 1)
+    (def parts (filter |(not (empty? $))
+                       (string/split " " (get lines 1))))
+    (when (>= (length parts) 5)
+      {:total (scan-number (get parts 1))
+       :used (scan-number (get parts 2))
+       :available (scan-number (get parts 3))
+       :usage (string (get parts 4))})))
+
+(pp (get-disk-usage "/"))
+```
+
+## 10.9 守护进程
+
+### 创建守护进程
+
+```janet
+(defn daemonize []
+  # Fork 第一次
+  (def pid (os/fork))
+  (when (> pid 0)
+    (os/exit 0))  # 父进程退出
+  
+  # 创建新会话
+  (os/setsid)
+  
+  # Fork 第二次
+  (def pid2 (os/fork))
+  (when (> pid2 0)
+    (os/exit 0))
+  
+  # 改变工作目录
+  (os/cd "/")
+  
+  # 重定向标准 I/O
+  (def null (file/open "/dev/null" :rw))
+  (os/dup2 null 0)  # stdin
+  (os/dup2 null 1)  # stdout
+  (os/dup2 null 2)  # stderr
+  (file/close null))
+
+# 使用
+# (daemonize)
+# (while true
+#   # 守护进程工作
+#   (ev/sleep 1))
+```
+
+### PID 文件
+
+```janet
+(defn write-pidfile [path]
+  (def pid (os/getpid))
+  (spit path (string pid "\n")))
+
+(defn read-pidfile [path]
+  (try
+    (scan-number (string/trim (slurp path)))
+    ([_] nil)))
+
+(defn remove-pidfile [path]
+  (os/rm path))
+
+# 使用
+(write-pidfile "/var/run/myapp.pid")
+(defer (remove-pidfile "/var/run/myapp.pid")
+  # 应用逻辑
+  )
+```
+
+## 10.10 跨平台编程
+
+### 平台检测
+
+```janet
+(defn platform-specific [& {:linux nil :macos nil :windows nil}]
+  (case (os/which)
+    :linux (linux)
+    :macos (macos)
+    :windows (windows)
+    (error "Unsupported platform")))
+
+# 使用
+(platform-specific
+  :linux (fn [] (print "Running on Linux"))
+  :macos (fn [] (print "Running on macOS"))
+  :windows (fn [] (print "Running on Windows")))
+```
+
+### 路径分隔符
+
+```janet
+(def path-separator
+  (if (= (os/which) :windows) "\\" "/"))
+
+(defn join-path [& parts]
+  (string/join parts path-separator))
+```
+
+## 10.11 实践练习
+
+### 练习 1：文件监控
+
+实现一个文件变化监控器：
+
+```janet
+(defn watch-file [path callback]
+  # TODO: 监控文件变化并调用回调
+  )
+```
+
+### 练习 2：进程管理器
+
+实现一个简单的进程管理器，可以启动、停止和重启进程：
+
+```janet
+(defn make-process-manager []
+  # TODO
+  )
+```
+
+### 练习 3：系统资源监控器
+
+创建一个全面的系统资源监控工具：
+
+```janet
+(defn system-monitor []
+  # TODO: 监控 CPU、内存、磁盘、网络
+  )
+```
+
+## 10.12 总结
+
+本章学习了：
+
+- ✓ 文件系统操作
+- ✓ 进程管理和控制
+- ✓ 环境变量和信号处理
+- ✓ 定时器和调度
+- ✓ 系统信息获取
+- ✓ 日志系统
+- ✓ 系统监控工具
+- ✓ 守护进程
+- ✓ 跨平台编程
+
+### 关键要点
+
+1. **丰富的系统 API** - 覆盖大部分系统编程需求
+2. **跨平台支持** - 统一的接口
+3. **与 Unix 哲学一致** - 小工具组合
+4. **实用主义** - 简单直接的 API
+5. **可扩展** - 通过 FFI 访问更多系统功能
+
+---
+
+← [上一章：网络编程](./09-networking.md) | [返回目录](./README.md) | [下一章：PEG 解析器](./11-peg-parsing.md) →

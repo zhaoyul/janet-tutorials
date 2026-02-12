@@ -1,0 +1,588 @@
+# 第九章：网络编程
+
+Janet 内置了强大的网络功能，无需外部依赖即可编写高性能的网络应用。
+
+## 9.1 网络模块概述
+
+### net 模块
+
+```janet
+# Janet 的 net 模块提供：
+# - TCP/UDP Socket
+# - 服务器和客户端
+# - 异步 I/O（基于事件循环）
+# - 跨平台支持
+
+# 导入（实际上已内置）
+# net 模块是核心模块，直接可用
+```
+
+### 基本概念
+
+```janet
+# Socket 类型
+# - Stream: TCP 连接
+# - Datagram: UDP 连接
+
+# 地址格式
+# - IPv4: "127.0.0.1"
+# - IPv6: "::1"
+# - 主机名: "localhost"
+
+# 端口：整数 1-65535
+```
+
+## 9.2 TCP 客户端
+
+### 基本连接
+
+```janet
+# 连接到服务器
+(def conn (net/connect "example.com" "80"))
+
+# 发送数据
+(:write conn "GET / HTTP/1.0\r\nHost: example.com\r\n\r\n")
+
+# 读取响应
+(def response (:read conn 4096))
+(print response)
+
+# 关闭连接
+(:close conn)
+
+# 使用 defer 确保关闭
+(def conn (net/connect "example.com" "80"))
+(defer (:close conn)
+  (:write conn "GET / HTTP/1.0\r\n\r\n")
+  (print (:read conn 4096)))
+```
+
+### 完整的 HTTP 客户端示例
+
+```janet
+(defn http-get [host path &opt port]
+  (default port "80")
+  (def conn (net/connect host port))
+  (defer (:close conn)
+    # 发送 HTTP 请求
+    (def request
+      (string/format "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n"
+                     path host))
+    (:write conn request)
+    
+    # 读取完整响应
+    (def response @"")
+    (def buf @"")
+    (while (:read conn 4096 buf)
+      (buffer/push response buf)
+      (buffer/clear buf))
+    (string response)))
+
+# 使用
+(print (http-get "example.com" "/"))
+```
+
+### 错误处理
+
+```janet
+(defn safe-connect [host port]
+  (try
+    (net/connect host port)
+    ([err]
+     (eprint "Connection failed: " err)
+     nil)))
+
+(if-let [conn (safe-connect "example.com" "80")]
+  (defer (:close conn)
+    # 使用连接
+    )
+  (print "Could not connect"))
+```
+
+## 9.3 TCP 服务器
+
+### 基本服务器
+
+```janet
+# 创建 Echo 服务器
+(defn handler [stream]
+  (defer (:close stream)
+    (def buf @"")
+    (while (:read stream 1024 buf)
+      (:write stream buf)
+      (buffer/clear buf))))
+
+# 启动服务器
+(net/server "127.0.0.1" "8000" handler)
+```
+
+### 完整的 HTTP 服务器
+
+```janet
+(defn parse-http-request [request]
+  # 简单的 HTTP 请求解析
+  (def lines (string/split "\r\n" request))
+  (def [method path version] (string/split " " (first lines)))
+  {:method method :path path :version version})
+
+(defn http-handler [stream]
+  (defer (:close stream)
+    # 读取请求
+    (def request (:read stream 4096))
+    
+    # 解析请求
+    (def parsed (parse-http-request request))
+    
+    # 生成响应
+    (def body "<html><body><h1>Hello from Janet!</h1></body></html>")
+    (def response
+      (string "HTTP/1.1 200 OK\r\n"
+              "Content-Type: text/html\r\n"
+              "Content-Length: " (length body) "\r\n"
+              "Connection: close\r\n"
+              "\r\n"
+              body))
+    
+    # 发送响应
+    (:write stream response)))
+
+# 启动服务器
+(print "Starting HTTP server on port 8080...")
+(net/server "127.0.0.1" "8080" http-handler)
+```
+
+### 多客户端处理
+
+```janet
+# Janet 的 net/server 自动处理多客户端
+# 每个连接在独立的 fiber 中处理
+
+(defn concurrent-handler [stream]
+  (defer (:close stream)
+    (def client-id (os/cryptorand 4))
+    (printf "Client %s connected" (string/format "%x" client-id))
+    
+    # 处理客户端
+    (def buf @"")
+    (while (:read stream 1024 buf)
+      (printf "Client %s: %s" (string/format "%x" client-id) buf)
+      (:write stream (string "Echo: " buf))
+      (buffer/clear buf))
+    
+    (printf "Client %s disconnected" (string/format "%x" client-id))))
+
+(net/server "127.0.0.1" "8000" concurrent-handler)
+```
+
+## 9.4 UDP 编程
+
+### UDP 客户端
+
+```janet
+# 创建 UDP socket
+(def sock (net/socket :datagram))
+
+# 发送数据包
+(:send-to sock "Hello, UDP!" "127.0.0.1" "9000")
+
+# 接收数据包
+(def [data host port] (:recv-from sock 1024))
+(printf "Received: %s from %s:%s" data host port)
+
+# 关闭
+(:close sock)
+```
+
+### UDP 服务器
+
+```janet
+(defn udp-server [host port]
+  (def sock (net/socket :datagram))
+  (:bind sock host port)
+  
+  (print "UDP server listening on " host ":" port)
+  
+  (while true
+    (def [data client-host client-port] (:recv-from sock 1024))
+    (printf "Received from %s:%s: %s" client-host client-port data)
+    
+    # 回复
+    (:send-to sock (string "Echo: " data) client-host client-port)))
+
+# 启动服务器
+(udp-server "127.0.0.1" "9000")
+```
+
+## 9.5 异步 I/O 与事件循环
+
+### 事件循环基础
+
+```janet
+# Janet 的网络 I/O 是异步的
+# 基于纤程（fibers）和事件循环
+
+# 事件循环自动管理：
+# - Socket 就绪通知
+# - 超时
+# - Fiber 调度
+```
+
+### 并发连接示例
+
+```janet
+(defn fetch-concurrent [urls]
+  (def fibers @[])
+  
+  # 为每个 URL 创建 fiber
+  (each url urls
+    (def f (fiber/new
+            (fn []
+              (try
+                (def conn (net/connect "example.com" "80"))
+                (defer (:close conn)
+                  (:write conn (string "GET " url " HTTP/1.1\r\n\r\n"))
+                  (def response (:read conn 1024))
+                  {:url url :response response})
+                ([err]
+                 {:url url :error err})))))
+    (array/push fibers f))
+  
+  # 并发执行所有 fibers
+  (map resume fibers))
+
+# 使用
+(def results (fetch-concurrent ["/page1" "/page2" "/page3"]))
+(pp results)
+```
+
+### 超时控制
+
+```janet
+(defn with-timeout [timeout-ms f]
+  # 创建超时 fiber
+  (def timeout-fiber
+    (fiber/new
+     (fn []
+       (ev/sleep (/ timeout-ms 1000))
+       :timeout)))
+  
+  # 创建工作 fiber
+  (def work-fiber (fiber/new f))
+  
+  # 竞争：哪个先完成
+  (def result (ev/gather timeout-fiber work-fiber))
+  
+  (if (= result :timeout)
+    (error "Operation timed out")
+    result))
+
+# 使用
+(try
+  (with-timeout 5000
+    (fn []
+      (def conn (net/connect "slow-server.com" "80"))
+      # ...
+      ))
+  ([err]
+   (print "Timeout or error: " err)))
+```
+
+## 9.6 实战：构建 REST API 服务器
+
+### 路由系统
+
+```janet
+(def routes @{})
+
+(defmacro route [method path handler]
+  ~(put routes [,method ,path] ,handler))
+
+# 定义路由
+(route "GET" "/" 
+  (fn [req] 
+    {:status 200 
+     :body "Hello, World!"}))
+
+(route "GET" "/api/users"
+  (fn [req]
+    {:status 200
+     :headers {"Content-Type" "application/json"}
+     :body `[{"id": 1, "name": "Alice"}]`}))
+
+(route "POST" "/api/users"
+  (fn [req]
+    # 处理 POST 数据
+    {:status 201
+     :body "User created"}))
+```
+
+### 请求解析
+
+```janet
+(defn parse-request-line [line]
+  (def parts (string/split " " line))
+  {:method (get parts 0)
+   :path (get parts 1)
+   :version (get parts 2)})
+
+(defn parse-headers [lines]
+  (def headers @{})
+  (each line lines
+    (when (not (empty? line))
+      (def [key value] (string/split ": " line))
+      (put headers key value)))
+  headers)
+
+(defn parse-http [request-str]
+  (def lines (string/split "\r\n" request-str))
+  (def request-line (parse-request-line (first lines)))
+  (def headers (parse-headers (slice lines 1)))
+  (merge request-line {:headers headers}))
+```
+
+### 响应生成
+
+```janet
+(defn make-response [status &opt body headers]
+  (default body "")
+  (default headers @{})
+  
+  (def status-text
+    (match status
+      200 "OK"
+      201 "Created"
+      404 "Not Found"
+      500 "Internal Server Error"
+      "Unknown"))
+  
+  # 添加默认 headers
+  (put headers "Content-Length" (string (length body)))
+  (when (not (has-key? headers "Content-Type"))
+    (put headers "Content-Type" "text/plain"))
+  
+  # 构建响应
+  (def header-str
+    (string/join
+     (map (fn [[k v]] (string k ": " v)) (pairs headers))
+     "\r\n"))
+  
+  (string "HTTP/1.1 " status " " status-text "\r\n"
+          header-str "\r\n"
+          "\r\n"
+          body))
+```
+
+### 完整的 REST API 服务器
+
+```janet
+(defn api-handler [stream]
+  (defer (:close stream)
+    (def request-str (:read stream 4096))
+    
+    (try
+      # 解析请求
+      (def req (parse-http request-str))
+      
+      # 查找路由
+      (def handler (get routes [(req :method) (req :path)]))
+      
+      (def response
+        (if handler
+          # 调用处理器
+          (let [resp (handler req)
+                status (get resp :status 200)
+                body (get resp :body "")
+                headers (get resp :headers @{})]
+            (make-response status body headers))
+          # 404
+          (make-response 404 "Not Found")))
+      
+      # 发送响应
+      (:write stream response)
+      
+      ([err]
+       # 500
+       (:write stream (make-response 500 "Internal Server Error"))))))
+
+# 启动 API 服务器
+(print "Starting REST API server on port 8080...")
+(net/server "127.0.0.1" "8080" api-handler)
+```
+
+## 9.7 WebSocket 支持（简化版）
+
+### WebSocket 握手
+
+```janet
+(import spork/base64)
+
+(defn websocket-handshake [stream key]
+  # WebSocket 握手协议
+  (def magic "258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
+  (def accept-key
+    (base64/encode
+     (crypto/sha1 (string key magic))))
+  
+  (def response
+    (string "HTTP/1.1 101 Switching Protocols\r\n"
+            "Upgrade: websocket\r\n"
+            "Connection: Upgrade\r\n"
+            "Sec-WebSocket-Accept: " accept-key "\r\n"
+            "\r\n"))
+  
+  (:write stream response))
+
+# 注：完整的 WebSocket 实现需要处理帧格式
+# 建议使用第三方库如 spork/websocket
+```
+
+## 9.8 性能优化
+
+### 连接池
+
+```janet
+(defn make-connection-pool [host port max-connections]
+  (def pool @[])
+  (def available @[])
+  
+  @{:acquire
+    (fn []
+      (if (> (length available) 0)
+        (array/pop available)
+        (if (< (length pool) max-connections)
+          (let [conn (net/connect host port)]
+            (array/push pool conn)
+            conn)
+          (error "Connection pool exhausted"))))
+    
+    :release
+    (fn [conn]
+      (array/push available conn))})
+
+# 使用
+(def pool (make-connection-pool "example.com" "80" 10))
+
+(def conn ((pool :acquire)))
+# 使用连接...
+((pool :release) conn)
+```
+
+### 缓冲优化
+
+```janet
+# 复用缓冲区减少分配
+(def read-buffer @"")
+
+(defn optimized-handler [stream]
+  (defer (:close stream)
+    (while (:read stream 4096 read-buffer)
+      # 处理数据
+      (:write stream read-buffer)
+      (buffer/clear read-buffer))))
+```
+
+## 9.9 实战：网络爬虫
+
+```janet
+(defn fetch-url [url]
+  # 简单的 URL 获取（实际需要解析 URL）
+  (def conn (net/connect "example.com" "80"))
+  (defer (:close conn)
+    (:write conn (string "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n"))
+    (:read conn 8192)))
+
+(defn extract-links [html]
+  # 简单的链接提取（实际需要 HTML 解析）
+  (def links @[])
+  (def pattern (peg/compile ~(* "href=\"" (capture (to "\"")))))
+  (peg/match pattern html)
+  links)
+
+(defn crawl [start-url max-depth]
+  (def visited @{})
+  (def to-visit @[[start-url 0]])
+  
+  (while (> (length to-visit) 0)
+    (def [url depth] (array/pop to-visit))
+    
+    (when (and (not (visited url))
+               (<= depth max-depth))
+      (print "Crawling: " url " (depth " depth ")")
+      (put visited url true)
+      
+      (try
+        (def html (fetch-url url))
+        (def links (extract-links html))
+        
+        (each link links
+          (array/push to-visit [link (inc depth)]))
+        
+        ([err]
+         (eprint "Error crawling " url ": " err))))))
+
+# 使用
+(crawl "http://example.com" 2)
+```
+
+## 9.10 实践练习
+
+### 练习 1：聊天服务器
+
+实现一个多用户聊天服务器：
+
+```janet
+(defn chat-server []
+  # TODO: 
+  # - 管理多个客户端连接
+  # - 广播消息给所有客户端
+  # - 处理客户端加入/离开
+  )
+```
+
+### 练习 2：代理服务器
+
+实现一个简单的 HTTP 代理：
+
+```janet
+(defn proxy-handler [client-stream]
+  # TODO:
+  # - 解析客户端请求
+  # - 连接到目标服务器
+  # - 转发请求和响应
+  )
+```
+
+### 练习 3：负载均衡器
+
+实现一个轮询负载均衡器：
+
+```janet
+(def backends ["server1:8080" "server2:8080" "server3:8080"])
+
+(defn load-balancer [client-stream]
+  # TODO: 将请求分发到不同的后端
+  )
+```
+
+## 9.11 总结
+
+本章学习了：
+
+- ✓ TCP/UDP 网络编程
+- ✓ 服务器和客户端开发
+- ✓ 异步 I/O 和事件循环
+- ✓ REST API 服务器实现
+- ✓ 性能优化技巧
+- ✓ 实战项目
+
+### 关键要点
+
+1. **内置网络支持** - 无需外部依赖
+2. **基于 Fiber 的并发** - 自然的异步编程
+3. **跨平台** - 统一的 API
+4. **高性能** - 事件驱动架构
+5. **简单易用** - 比 Node.js 更简洁
+
+---
+
+← [上一章：FFI 与 C 互操作](./08-ffi-c-interop.md) | [返回目录](./README.md) | [下一章：系统编程](./10-system-programming.md) →
