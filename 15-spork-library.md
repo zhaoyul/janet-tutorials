@@ -1,0 +1,214 @@
+# 第十五章：Spork 扩展标准库
+
+Spork 是 Janet 官方的扩展标准库（contrib library），包含大量实用模块，用于补充核心标准库中没有但项目开发中常用的能力。它覆盖命令行工具、网络服务、构建工具链、数据处理、模板渲染、系统自动化等多个领域，可以视为 Janet 的“扩展工具箱”。
+
+## 15.1 Spork 概览
+
+Spork 的定位是“通用但不进入核心库的功能集合”。它既提供纯 Janet 模块，也包含少量原生扩展（C 实现），用于性能敏感或系统相关的能力。使用 Spork 的好处是：
+
+- **减少重复造轮子**：常见能力（JSON、HTTP、CLI、模板等）开箱即用
+- **模块化组合**：按需导入，保持依赖清晰
+- **官方维护**：与 Janet 生态保持一致的风格和升级节奏
+
+## 15.2 安装与版本选择
+
+Spork 的安装方式与 Janet 版本有关，推荐使用官方支持的方式：
+
+```bash
+# Janet >= 1.38.0（推荐）
+git clone https://github.com/janet-lang/spork.git
+cd spork
+[sudo] janet --install .
+
+# 旧版本但支持 bundle
+[sudo] janet -e '(bundle/install ".")'
+
+# 传统方式（仍可用）
+[sudo] jpm install spork
+```
+
+安装完成后，模块会被放入 `JANET_PATH`，可执行脚本会放入 `JANET_PATH/bin`。
+
+## 15.3 导入方式与模块组织
+
+Spork 以 `spork/` 作为模块前缀，推荐按需导入：
+
+```janet
+(import spork/json)
+(import spork/argparse)
+
+(json/encode {:ok true})
+```
+
+如果需要一次性导入全部模块，可以使用：
+
+```janet
+(use spork)
+```
+
+## 15.4 模块地图（按功能分类）
+
+Spork 模块数量较多，按用途分类可以快速定位：
+
+### CLI 与开发工具
+- `argparse`：命令行参数解析
+- `pm` / `pm-config`：Janet 包管理工具相关模块
+- `netrepl`：网络 REPL 服务器/客户端
+- `test`：测试辅助工具
+- `version`：版本信息工具
+- `msg`：消息格式化与日志辅助
+
+### 构建与 FFI
+- `build-rules`：构建规则抽象
+- `cc` / `declare-cc`：C 编译与配置辅助
+- `cjanet`：生成 Janet/C 互操作骨架
+
+### 网络与服务
+- `http` / `httpf`：HTTP 协议、客户端/服务器
+- `rpc`：简单 RPC 支持
+- `services`：服务管理与生命周期辅助
+- `channel`：事件/通道通信
+
+### 数据与序列化
+- `json`：JSON 编解码（原生模块）
+- `base64`：Base64 编解码（原生模块）
+- `crc`：CRC 校验（原生模块）
+- `zip`：Zip 压缩（原生模块）
+- `utf8`：UTF-8 工具（原生模块）
+- `tarray`：Typed Array（原生模块）
+- `data` / `schema`：数据结构与校验
+
+### 文本与模板
+- `regex`：正则表达式辅助
+- `temple`：模板引擎
+- `htmlgen`：HTML 生成工具
+- `fmt`：格式化输出
+- `infix`：中缀语法辅助
+
+### 系统与自动化
+- `sh` / `sh-dsl`：Shell 命令调用与 DSL
+- `path`：路径操作
+- `stream`：流式处理工具
+- `getline`：交互式输入
+- `tasker`：任务调度器
+- `ev-utils`：事件循环辅助
+
+### 时间、随机与数学
+- `cron`：Cron 解析与调度
+- `randgen`：随机数/种子工具
+- `math`：数学辅助函数
+- `generators`：生成器与序列工具
+- `misc`：通用小工具
+
+### 安全相关
+- `pgp`：PGP 相关功能
+- `rawterm`：终端模式控制（原生模块）
+
+> 模块列表会随着 Spork 版本更新而扩展，推荐结合官方文档查看最新 API。
+
+## 15.5 典型模块实战
+
+### CLI 参数解析（argparse）
+
+```janet
+(import spork/argparse)
+
+(def opts
+  (argparse/argparse "demo"
+    "verbose" {:kind :flag :short "v" :help "输出调试日志"}
+    "port" {:kind :option :default "8080" :help "监听端口"}))
+
+(print "Verbose?" (opts :verbose))
+(print "Port:" (opts :port))
+```
+
+### JSON 编解码（json）
+
+```janet
+(import spork/json)
+
+(def payload (json/encode {:service "spork" :ok true}))
+(def decoded (json/decode payload))
+(print decoded)
+```
+
+### HTTP 服务器（http）
+
+```janet
+(import spork/http)
+
+(defn handler [_req]
+  {:status 200
+   :headers {"Content-Type" "text/plain"}
+   :body "Hello Spork"})
+
+(http/server "127.0.0.1" 8080 handler)
+```
+
+### Cron 调度（cron）
+
+```janet
+(import spork/cron)
+
+(def schedule (cron/parse-cron "*/5 * * * *"))
+(def next-run (cron/next-timestamp schedule))
+(print "Next run at:" next-run)
+```
+
+### 模板渲染（temple）
+
+```janet
+(import spork/temple)
+
+(temple/render "Hello {{ name }}" {:name "Janet"})
+```
+
+### Shell 自动化（sh）
+
+```janet
+(import spork/sh)
+
+(def output (sh/exec-slurp "git" "status" "--short"))
+(print output)
+```
+
+## 15.6 Spork 附带脚本工具
+
+Spork 附带了几个实用的命令行工具：
+
+- `janet-format`：格式化 Janet 代码
+- `janet-netrepl`：远程 REPL
+- `janet-pm`：包管理辅助工具（与 jpm 配合）
+
+这些脚本安装后位于 `JANET_PATH/bin`，可直接在命令行中使用。
+
+## 15.7 在项目中使用 Spork
+
+在 `project.janet` 中声明依赖后即可在代码里引用：
+
+```janet
+(declare-project
+  :name "my-app"
+  :dependencies ["spork"])
+```
+
+```janet
+# src/main.janet
+(import spork/json)
+(import spork/argparse)
+```
+
+## 15.8 总结
+
+Spork 为 Janet 提供了系统级开发所需的“扩展标准库”，覆盖从 CLI、网络服务到构建工具链的完整开发流程：
+
+- ✓ 模块化组织，按需加载
+- ✓ 官方维护，可靠稳定
+- ✓ 功能覆盖面广，适合工程化项目
+- ✓ 与 Janet 生态深度集成
+
+在完成本章后，你可以更系统地使用 Spork 构建生产级 Janet 应用。
+
+---
+
+← [上一章：实战项目](./14-practical-projects.md) | [返回目录](./README.md) | [附录 A：与其他 Lisp 的详细对比](./appendix-a-lisp-comparison.md) →

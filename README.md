@@ -129,6 +129,12 @@ Janet 是一门现代的动态函数式编程语言，结合了 Lisp 的强大�
 - 项目 4：简单的脚本语言解释器
 - 项目 5：系统监控守护进程
 
+### [第十五章：Spork 扩展标准库](./15-spork-library.md)
+- Spork 概览与安装
+- 模块地图与功能分类
+- 典型模块实战
+- Spork 工具链与项目集成
+
 ### [附录 A：与其他 Lisp 的详细对比](./appendix-a-lisp-comparison.md)
 - Janet vs Common Lisp
 - Janet vs Scheme (Racket, Guile)
