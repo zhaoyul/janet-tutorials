@@ -334,6 +334,61 @@ gcc embed.c -I/path/to/janet -ljanet -o embed
 # 输出: Result: 6.000000
 ```
 
+### 方式 3：以 raylib 为例（与 C/C++ 项目互动）
+
+raylib 是 C 写的图形库，也常在 C++ 项目中使用。实践里建议先写一层很薄的 C 包装，再给 Janet 调用，这样可以同时规避 C++ 名字改编问题并简化类型映射。
+
+```c
+/* raylib_bridge.c */
+#include "raylib.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void rl_init_window(int w, int h, const char *title) { InitWindow(w, h, title); }
+void rl_begin_drawing(void) { BeginDrawing(); }
+void rl_end_drawing(void) { EndDrawing(); }
+void rl_clear_background(int color) { ClearBackground((Color) {color, color, color, 255}); }
+void rl_draw_text(const char *text, int x, int y, int size) { DrawText(text, x, y, size, RAYWHITE); }
+int rl_window_should_close(void) { return WindowShouldClose() ? 1 : 0; }
+void rl_close_window(void) { CloseWindow(); }
+
+#ifdef __cplusplus
+}
+#endif
+```
+
+```bash
+# Linux 示例（C）
+gcc -shared -fPIC raylib_bridge.c -lraylib -o libraylib_bridge.so
+
+# Linux 示例（C++ 项目中编译同一桥接文件）
+g++ -shared -fPIC raylib_bridge.c -lraylib -o libraylib_bridge.so
+```
+
+```janet
+(ffi/native "./libraylib_bridge.so")
+
+(ffi/defbind rl_init_window :void [w :int h :int title :string])
+(ffi/defbind rl_begin_drawing :void [])
+(ffi/defbind rl_end_drawing :void [])
+(ffi/defbind rl_clear_background :void [gray :int])
+(ffi/defbind rl_draw_text :void [text :string x :int y :int size :int])
+(ffi/defbind rl_window_should_close :int [])
+(ffi/defbind rl_close_window :void [])
+
+(rl_init_window 800 450 "Janet + raylib")
+(while (= 0 (rl_window_should_close))
+  (rl_begin_drawing)
+  (rl_clear_background 30)
+  (rl_draw_text "Hello from Janet FFI" 190 200 24)
+  (rl_end_drawing))
+(rl_close_window)
+```
+
+这个模式同样适用于 SDL、OpenGL 包装层或你自己的 C++ 引擎导出接口（`extern "C"`）。
+
 ## 8.6 C API 核心函数
 
 ### 类型转换
