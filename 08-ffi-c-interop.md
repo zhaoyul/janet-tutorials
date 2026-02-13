@@ -346,11 +346,15 @@ raylib 是 C 写的图形库，也常在 C++ 项目中使用。实践里建议�
 extern "C" {
 #endif
 
+/* 以下示例使用 C99 复合字面量 */
 void rl_init_window(int w, int h, const char *title) { InitWindow(w, h, title); }
 void rl_begin_drawing(void) { BeginDrawing(); }
 void rl_end_drawing(void) { EndDrawing(); }
-void rl_clear_background(int color) { ClearBackground((Color) {color, color, color, 255}); }
-void rl_draw_text(const char *text, int x, int y, int size) { DrawText(text, x, y, size, RAYWHITE); }
+void rl_clear_background(int r, int g, int b, int a) { ClearBackground((Color) {r, g, b, a}); }
+/* text, x, y, size, r, g, b, a */
+void rl_draw_text(const char *text, int x, int y, int size, int r, int g, int b, int a) {
+    DrawText(text, x, y, size, (Color) {r, g, b, a});
+}
 int rl_window_should_close(void) { return WindowShouldClose() ? 1 : 0; }
 void rl_close_window(void) { CloseWindow(); }
 
@@ -361,6 +365,7 @@ void rl_close_window(void) { CloseWindow(); }
 
 ```bash
 # Linux 示例（C）
+# 如果 raylib 不在系统默认路径，追加 -I/path/to/raylib/include -L/path/to/raylib/lib
 gcc -shared -fPIC raylib_bridge.c -lraylib -o libraylib_bridge.so
 
 # Linux 示例（C++ 项目中编译同一桥接文件）
@@ -373,16 +378,16 @@ g++ -shared -fPIC raylib_bridge.c -lraylib -o libraylib_bridge.so
 (ffi/defbind rl_init_window :void [w :int h :int title :string])
 (ffi/defbind rl_begin_drawing :void [])
 (ffi/defbind rl_end_drawing :void [])
-(ffi/defbind rl_clear_background :void [gray :int])
-(ffi/defbind rl_draw_text :void [text :string x :int y :int size :int])
+(ffi/defbind rl_clear_background :void [r :int g :int b :int a :int])
+(ffi/defbind rl_draw_text :void [text :string x :int y :int size :int r :int g :int b :int a :int])
 (ffi/defbind rl_window_should_close :int [])
 (ffi/defbind rl_close_window :void [])
 
 (rl_init_window 800 450 "Janet + raylib")
 (while (= 0 (rl_window_should_close))
   (rl_begin_drawing)
-  (rl_clear_background 30)
-  (rl_draw_text "Hello from Janet FFI" 190 200 24)
+  (rl_clear_background 30 30 30 255)
+  (rl_draw_text "Hello from Janet FFI" 190 200 24 245 245 245 255)
   (rl_end_drawing))
 (rl_close_window)
 ```
