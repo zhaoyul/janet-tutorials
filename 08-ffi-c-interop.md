@@ -394,6 +394,109 @@ g++ -shared -fPIC raylib_bridge.c -lraylib -o libraylib_bridge.so
 
 这个模式同样适用于 SDL、OpenGL 包装层或你自己的 C++ 引擎导出接口（`extern "C"`）。
 
+如果要做“全套”互操作，不只是开窗绘制，通常还会覆盖下面几类：
+
+1. **常量与枚举**：在桥接层导出函数或常量表（如 `KEY_SPACE`、`FLAG_VSYNC_HINT`）。
+2. **结构体互传**：`Vector2`、`Rectangle`、`Color` 等在 Janet 和 C 间双向传递。
+3. **资源生命周期**：纹理/声音/字体的 load-use-unload 成对管理。
+4. **输入与主循环控制**：键鼠状态、FPS 控制、窗口状态。
+5. **C++ 对象桥接**：用“不透明指针 + C 包装函数”访问 C++ 类实例。
+
+#### A) 常量/输入/帧控制
+
+```c
+/* 示例里用函数导出常量；生产环境也可在 Janet 侧维护常量映射 */
+int rl_key_space(void) { return KEY_SPACE; }
+int rl_is_key_down(int key) { return IsKeyDown(key) ? 1 : 0; }
+void rl_set_target_fps(int fps) { SetTargetFPS(fps); }
+```
+
+```janet
+(ffi/defbind rl_key_space :int [])
+(ffi/defbind rl_is_key_down :int [key :int])
+(ffi/defbind rl_set_target_fps :void [fps :int])
+(defn key-down? [key] (= 1 (rl_is_key_down key)))
+
+(rl_set_target_fps 60)
+(when (key-down? (rl_key_space))
+  (print "space pressed"))
+```
+
+#### B) 结构体互传（Vector2）
+
+```c
+void rl_draw_circle_v(float x, float y, float radius, int r, int g, int b, int a) {
+    DrawCircleV((Vector2) {x, y}, radius, (Color) {r, g, b, a});
+}
+```
+
+```janet
+(ffi/defbind rl_draw_circle_v :void [x :float y :float radius :float r :int g :int b :int a :int])
+(rl_draw_circle_v 120.0 100.0 24.0 255 180 80 255)
+```
+
+#### C) 资源对象生命周期（Texture2D）
+
+```c
+#include <stdlib.h>
+
+typedef struct RLTextureHandle {
+    Texture2D tex;
+} RLTextureHandle;
+
+RLTextureHandle *rl_load_texture(const char *path) {
+    RLTextureHandle *h = malloc(sizeof(RLTextureHandle));
+    if (!h) return NULL;
+    h->tex = LoadTexture(path);
+    /* raylib: 加载失败时 tex.id == 0 */
+    if (h->tex.id == 0) { free(h); return NULL; }
+    return h;
+}
+
+void rl_draw_texture(RLTextureHandle *h, int x, int y) { if (h) DrawTexture(h->tex, x, y, WHITE); }
+void rl_unload_texture(RLTextureHandle *h) { if (h) { UnloadTexture(h->tex); free(h); } }
+```
+
+```janet
+(ffi/defbind rl_load_texture :ptr [path :string])
+(ffi/defbind rl_draw_texture :void [h :ptr x :int y :int])
+(ffi/defbind rl_unload_texture :void [h :ptr])
+
+(def tex (rl_load_texture "./assets/logo.png"))
+(when tex
+  (defer (rl_unload_texture tex)
+    (rl_draw_texture tex 32 32)))
+```
+
+#### D) C++ 互操作（不透明句柄）
+
+```cpp
+// engine_bridge.cpp
+class Engine {
+public:
+    void tick(double dt);
+};
+
+extern "C" {
+void *engine_new() { return new Engine(); }
+void engine_tick(void *p, double dt) { if (!p) return; static_cast<Engine *>(p)->tick(dt); }
+void engine_delete(void *p) { if (!p) return; delete static_cast<Engine *>(p); }
+}
+```
+
+```janet
+(ffi/native "./libengine_bridge.so")
+(ffi/defbind engine_new :ptr [])
+(ffi/defbind engine_tick :void [p :ptr dt :double])
+(ffi/defbind engine_delete :void [p :ptr])
+
+(def eng (engine_new))
+(defer (engine_delete eng)
+  (engine_tick eng 0.016))
+```
+
+这四组模式（输入控制、结构体互传、资源生命周期、C++ 对象句柄）加上前面的窗口渲染，就是 Janet 在图形/游戏场景中常见的一整套 interop 骨架。
+
 ## 8.6 C API 核心函数
 
 ### 类型转换
