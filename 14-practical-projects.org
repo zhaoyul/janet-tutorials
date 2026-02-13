@@ -1,10 +1,10 @@
-# 第十四章：实战项目
+* 第十四章：实战项目
 
 通过完整的实战项目，将所学的 Janet 知识应用到系统级开发中。
 
-## 14.1 项目 1：命令行工具 - 文件搜索器
+** 14.1 项目 1：命令行工具 - 文件搜索器
 
-### 需求分析
+*** 需求分析
 
 实现一个类似 `grep` 的文件搜索工具，支持：
 - 递归搜索目录
@@ -12,9 +12,9 @@
 - 显示行号和上下文
 - 彩色输出
 
-### 实现
+*** 实现
 
-```janet
+#+begin_src janet
 # filesearch.janet
 
 (def VERSION "1.0.0")
@@ -125,11 +125,11 @@ Example:
 
 # 运行
 (main ;(slice (dyn :args) 1))
-```
+#+end_src
 
-### 增强功能
+*** 增强功能
 
-```janet
+#+begin_src janet
 # 添加彩色输出
 (def ANSI_RED "\e[31m")
 (def ANSI_GREEN "\e[32m")
@@ -142,11 +142,11 @@ Example:
 # 在匹配处高亮
 (defn highlight-match [line pattern]
   (string/replace pattern (colorize pattern ANSI_RED) line))
-```
+#+end_src
 
-## 14.2 项目 2：网络爬虫
+** 14.2 项目 2：网络爬虫
 
-### 功能设计
+*** 功能设计
 
 - 递归抓取网页
 - 遵守 robots.txt
@@ -154,9 +154,9 @@ Example:
 - 速率限制
 - 导出数据
 
-### 核心实现
+*** 核心实现
 
-```janet
+#+begin_src janet
 # crawler.janet
 
 (import spork/json)
@@ -258,20 +258,20 @@ Example:
           (length results)))
 
 (main ;(slice (dyn :args) 1))
-```
+#+end_src
 
-## 14.3 项目 3：日志分析器
+** 14.3 项目 3：日志分析器
 
-### 功能
+*** 功能
 
 - 解析多种日志格式
 - 统计分析
 - 生成报告
 - 实时监控
 
-### 实现
+*** 实现
 
-```janet
+#+begin_src janet
 # loganalyzer.janet
 
 (defn parse-nginx-log [line]
@@ -371,20 +371,20 @@ Example:
   (generate-report stats))
 
 (main ;(slice (dyn :args) 1))
-```
+#+end_src
 
-## 14.4 项目 4：简单的 HTTP 服务器框架
+** 14.4 项目 4：简单的 HTTP 服务器框架
 
-### 设计目标
+*** 设计目标
 
 - 路由系统
 - 中间件支持
 - 模板引擎
 - 静态文件服务
 
-### 实现
+*** 实现
 
-```janet
+#+begin_src janet
 # webframework.janet
 
 (defn make-router []
@@ -472,13 +472,13 @@ Example:
   (net/server host port handler))
 
 # (start-server app "127.0.0.1" "8080")
-```
+#+end_src
 
-## 14.5 项目 5：系统监控守护进程
+** 14.5 项目 5：系统监控守护进程
 
-### 完整实现
+*** 完整实现
 
-```janet
+#+begin_src janet
 # sysmon.janet
 
 (defn get-metrics []
@@ -557,11 +557,11 @@ Example:
   (remove-pidfile "/var/run/sysmon.pid"))
 
 (main ;(slice (dyn :args) 1))
-```
+#+end_src
 
-## 14.6 项目总结
+** 14.6 项目总结
 
-### 学到的技能
+*** 学到的技能
 
 1. **命令行工具开发**
    - 参数解析
@@ -588,7 +588,7 @@ Example:
    - 错误处理
    - 测试和调试
 
-### 进阶方向
+*** 进阶方向
 
 - **性能优化** - 使用 FFI 加速关键路径
 - **分布式系统** - 添加远程通信和协调
@@ -597,11 +597,11 @@ Example:
 - **容器化** - Docker 部署
 - **监控和日志** - Prometheus、Grafana 集成
 
-## 14.7 部署建议
+** 14.7 部署建议
 
-### 打包应用
+*** 打包应用
 
-```bash
+#+begin_src bash
 # 使用 JPM 构建
 jpm build
 
@@ -610,11 +610,11 @@ janet -c filesearch.janet -o filesearch
 
 # 或使用 jpm
 jpm install
-```
+#+end_src
 
-### 系统集成
+*** 系统集成
 
-```bash
+#+begin_src bash
 # 创建 systemd 服务
 cat > /etc/systemd/system/sysmon.service << EOF
 [Unit]
@@ -633,9 +633,9 @@ EOF
 # 启动服务
 systemctl enable sysmon
 systemctl start sysmon
-```
+#+end_src
 
-## 14.8 总结
+** 14.8 总结
 
 通过这些实战项目，你已经掌握了：
 
@@ -649,4 +649,4 @@ systemctl start sysmon
 
 ---
 
-← [上一章：测试与调试](./13-testing-debugging.md) | [返回目录](./README.md) | [下一章：Spork 扩展标准库](./15-spork-library.md) →
+← [[./13-testing-debugging.org][上一章：测试与调试]] | [[./README.org][返回目录]] | [[./15-spork-library.org][下一章：Spork 扩展标准库]] →

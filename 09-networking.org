@@ -1,12 +1,12 @@
-# 第九章：网络编程
+* 第九章：网络编程
 
 Janet 内置了强大的网络功能，无需外部依赖即可编写高性能的网络应用。
 
-## 9.1 网络模块概述
+** 9.1 网络模块概述
 
-### net 模块
+*** net 模块
 
-```janet
+#+begin_src janet
 # Janet 的 net 模块提供：
 # - TCP/UDP Socket
 # - 服务器和客户端
@@ -15,11 +15,11 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
 
 # 导入（实际上已内置）
 # net 模块是核心模块，直接可用
-```
+#+end_src
 
-### 基本概念
+*** 基本概念
 
-```janet
+#+begin_src janet
 # Socket 类型
 # - Stream: TCP 连接
 # - Datagram: UDP 连接
@@ -30,13 +30,13 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
 # - 主机名: "localhost"
 
 # 端口：整数 1-65535
-```
+#+end_src
 
-## 9.2 TCP 客户端
+** 9.2 TCP 客户端
 
-### 基本连接
+*** 基本连接
 
-```janet
+#+begin_src janet
 # 连接到服务器
 (def conn (net/connect "example.com" "80"))
 
@@ -55,11 +55,11 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
 (defer (:close conn)
   (:write conn "GET / HTTP/1.0\r\n\r\n")
   (print (:read conn 4096)))
-```
+#+end_src
 
-### 完整的 HTTP 客户端示例
+*** 完整的 HTTP 客户端示例
 
-```janet
+#+begin_src janet
 (defn http-get [host path &opt port]
   (default port "80")
   (def conn (net/connect host port))
@@ -80,11 +80,11 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
 
 # 使用
 (print (http-get "example.com" "/"))
-```
+#+end_src
 
-### 错误处理
+*** 错误处理
 
-```janet
+#+begin_src janet
 (defn safe-connect [host port]
   (try
     (net/connect host port)
@@ -97,13 +97,13 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
     # 使用连接
     )
   (print "Could not connect"))
-```
+#+end_src
 
-## 9.3 TCP 服务器
+** 9.3 TCP 服务器
 
-### 基本服务器
+*** 基本服务器
 
-```janet
+#+begin_src janet
 # 创建 Echo 服务器
 (defn handler [stream]
   (defer (:close stream)
@@ -114,11 +114,11 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
 
 # 启动服务器
 (net/server "127.0.0.1" "8000" handler)
-```
+#+end_src
 
-### 完整的 HTTP 服务器
+*** 完整的 HTTP 服务器
 
-```janet
+#+begin_src janet
 (defn parse-http-request [request]
   # 简单的 HTTP 请求解析
   (def lines (string/split "\r\n" request))
@@ -149,11 +149,11 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
 # 启动服务器
 (print "Starting HTTP server on port 8080...")
 (net/server "127.0.0.1" "8080" http-handler)
-```
+#+end_src
 
-### 多客户端处理
+*** 多客户端处理
 
-```janet
+#+begin_src janet
 # Janet 的 net/server 自动处理多客户端
 # 每个连接在独立的 fiber 中处理
 
@@ -172,13 +172,13 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
     (printf "Client %s disconnected" (string/format "%x" client-id))))
 
 (net/server "127.0.0.1" "8000" concurrent-handler)
-```
+#+end_src
 
-## 9.4 UDP 编程
+** 9.4 UDP 编程
 
-### UDP 客户端
+*** UDP 客户端
 
-```janet
+#+begin_src janet
 # 创建 UDP socket
 (def sock (net/socket :datagram))
 
@@ -191,11 +191,11 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
 
 # 关闭
 (:close sock)
-```
+#+end_src
 
-### UDP 服务器
+*** UDP 服务器
 
-```janet
+#+begin_src janet
 (defn udp-server [host port]
   (def sock (net/socket :datagram))
   (:bind sock host port)
@@ -211,13 +211,13 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
 
 # 启动服务器
 (udp-server "127.0.0.1" "9000")
-```
+#+end_src
 
-## 9.5 异步 I/O 与事件循环
+** 9.5 异步 I/O 与事件循环
 
-### 事件循环基础
+*** 事件循环基础
 
-```janet
+#+begin_src janet
 # Janet 的网络 I/O 是异步的
 # 基于纤程（fibers）和事件循环
 
@@ -225,11 +225,11 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
 # - Socket 就绪通知
 # - 超时
 # - Fiber 调度
-```
+#+end_src
 
-### 并发连接示例
+*** 并发连接示例
 
-```janet
+#+begin_src janet
 (defn fetch-concurrent [urls]
   (def fibers @[])
   
@@ -253,11 +253,11 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
 # 使用
 (def results (fetch-concurrent ["/page1" "/page2" "/page3"]))
 (pp results)
-```
+#+end_src
 
-### 超时控制
+*** 超时控制
 
-```janet
+#+begin_src janet
 (defn with-timeout [timeout-ms f]
   # 创建超时 fiber
   (def timeout-fiber
@@ -285,13 +285,13 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
       ))
   ([err]
    (print "Timeout or error: " err)))
-```
+#+end_src
 
-## 9.6 实战：构建 REST API 服务器
+** 9.6 实战：构建 REST API 服务器
 
-### 路由系统
+*** 路由系统
 
-```janet
+#+begin_src janet
 (def routes @{})
 
 (defmacro route [method path handler]
@@ -314,11 +314,11 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
     # 处理 POST 数据
     {:status 201
      :body "User created"}))
-```
+#+end_src
 
-### 请求解析
+*** 请求解析
 
-```janet
+#+begin_src janet
 (defn parse-request-line [line]
   (def parts (string/split " " line))
   {:method (get parts 0)
@@ -338,11 +338,11 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
   (def request-line (parse-request-line (first lines)))
   (def headers (parse-headers (slice lines 1)))
   (merge request-line {:headers headers}))
-```
+#+end_src
 
-### 响应生成
+*** 响应生成
 
-```janet
+#+begin_src janet
 (defn make-response [status &opt body headers]
   (default body "")
   (default headers @{})
@@ -370,11 +370,11 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
           header-str "\r\n"
           "\r\n"
           body))
-```
+#+end_src
 
-### 完整的 REST API 服务器
+*** 完整的 REST API 服务器
 
-```janet
+#+begin_src janet
 (defn api-handler [stream]
   (defer (:close stream)
     (def request-str (:read stream 4096))
@@ -407,13 +407,13 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
 # 启动 API 服务器
 (print "Starting REST API server on port 8080...")
 (net/server "127.0.0.1" "8080" api-handler)
-```
+#+end_src
 
-## 9.7 WebSocket 支持（简化版）
+** 9.7 WebSocket 支持（简化版）
 
-### WebSocket 握手
+*** WebSocket 握手
 
-```janet
+#+begin_src janet
 (import spork/base64)
 
 (defn websocket-handshake [stream key]
@@ -434,13 +434,13 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
 
 # 注：完整的 WebSocket 实现需要处理帧格式
 # 建议使用第三方库如 spork/websocket
-```
+#+end_src
 
-## 9.8 性能优化
+** 9.8 性能优化
 
-### 连接池
+*** 连接池
 
-```janet
+#+begin_src janet
 (defn make-connection-pool [host port max-connections]
   (def pool @[])
   (def available @[])
@@ -465,11 +465,11 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
 (def conn ((pool :acquire)))
 # 使用连接...
 ((pool :release) conn)
-```
+#+end_src
 
-### 缓冲优化
+*** 缓冲优化
 
-```janet
+#+begin_src janet
 # 复用缓冲区减少分配
 (def read-buffer @"")
 
@@ -479,11 +479,11 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
       # 处理数据
       (:write stream read-buffer)
       (buffer/clear read-buffer))))
-```
+#+end_src
 
-## 9.9 实战：网络爬虫
+** 9.9 实战：网络爬虫
 
-```janet
+#+begin_src janet
 (defn fetch-url [url]
   # 简单的 URL 获取（实际需要解析 URL）
   (def conn (net/connect "example.com" "80"))
@@ -522,49 +522,49 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
 
 # 使用
 (crawl "http://example.com" 2)
-```
+#+end_src
 
-## 9.10 实践练习
+** 9.10 实践练习
 
-### 练习 1：聊天服务器
+*** 练习 1：聊天服务器
 
 实现一个多用户聊天服务器：
 
-```janet
+#+begin_src janet
 (defn chat-server []
   # TODO: 
   # - 管理多个客户端连接
   # - 广播消息给所有客户端
   # - 处理客户端加入/离开
   )
-```
+#+end_src
 
-### 练习 2：代理服务器
+*** 练习 2：代理服务器
 
 实现一个简单的 HTTP 代理：
 
-```janet
+#+begin_src janet
 (defn proxy-handler [client-stream]
   # TODO:
   # - 解析客户端请求
   # - 连接到目标服务器
   # - 转发请求和响应
   )
-```
+#+end_src
 
-### 练习 3：负载均衡器
+*** 练习 3：负载均衡器
 
 实现一个轮询负载均衡器：
 
-```janet
+#+begin_src janet
 (def backends ["server1:8080" "server2:8080" "server3:8080"])
 
 (defn load-balancer [client-stream]
   # TODO: 将请求分发到不同的后端
   )
-```
+#+end_src
 
-## 9.11 总结
+** 9.11 总结
 
 本章学习了：
 
@@ -575,7 +575,7 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
 - ✓ 性能优化技巧
 - ✓ 实战项目
 
-### 关键要点
+*** 关键要点
 
 1. **内置网络支持** - 无需外部依赖
 2. **基于 Fiber 的并发** - 自然的异步编程
@@ -585,4 +585,4 @@ Janet 内置了强大的网络功能，无需外部依赖即可编写高性能�
 
 ---
 
-← [上一章：FFI 与 C 互操作](./08-ffi-c-interop.md) | [返回目录](./README.md) | [下一章：系统编程](./10-system-programming.md) →
+← [[./08-ffi-c-interop.org][上一章：FFI 与 C 互操作]] | [[./README.org][返回目录]] | [[./10-system-programming.org][下一章：系统编程]] →

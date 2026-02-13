@@ -1,36 +1,36 @@
-# 附录 C：资源与社区
+* 附录 C：资源与社区
 
 本附录提供学习 Janet 的各种资源、工具和社区链接。
 
-## C.1 官方资源
+** C.1 官方资源
 
-### 官方网站和文档
+*** 官方网站和文档
 
 - **官方网站**: https://janet-lang.org/
 - **API 文档**: https://janet-lang.org/api/
 - **官方教程**: https://janet-lang.org/docs/index.html
 - **语言参考**: https://janet-lang.org/docs/syntax.html
 
-### 源代码
+*** 源代码
 
 - **GitHub 仓库**: https://github.com/janet-lang/janet
 - **问题追踪**: https://github.com/janet-lang/janet/issues
 - **讨论区**: https://github.com/janet-lang/janet/discussions
 
-## C.2 包和库
+** C.2 包和库
 
-### 官方包索引
+*** 官方包索引
 
 - **Janet Packages**: https://github.com/janet-lang/pkgs
 - **包搜索**: https://janet-lang.org/pkgs/
 
-### 核心库
+*** 核心库
 
 **Spork** - 官方扩展标准库
 - GitHub: https://github.com/janet-lang/spork
 - 功能: JSON, HTTP, 模板, 测试等
 
-### 推荐第三方库
+*** 推荐第三方库
 
 **Web 开发**
 - `circlet` - Web 服务器框架
@@ -51,9 +51,9 @@
 - `path` - 路径操作
 - `argparse` - 命令行参数解析
 
-## C.3 学习资源
+** C.3 学习资源
 
-### 教程和指南
+*** 教程和指南
 
 **英文资源**
 - Learn Janet in Y Minutes: https://learnxinyminutes.com/janet/
@@ -64,7 +64,7 @@
 - YouTube: 搜索 "Janet Programming Language"
 - Janet 作者的演讲: https://www.youtube.com/c/BakaBakaBaka
 
-### 书籍和文章
+*** 书籍和文章
 
 **博客文章**
 - 官方博客: https://janet-lang.org/blog.html
@@ -74,9 +74,9 @@
 - Janet Examples: https://github.com/janet-lang/janet/tree/master/examples
 - Awesome Janet: https://github.com/ahungry/awesome-janet
 
-## C.4 社区
+** C.4 社区
 
-### 在线社区
+*** 在线社区
 
 **官方渠道**
 - Gitter 聊天室: https://gitter.im/janet-language/community
@@ -87,7 +87,7 @@
 - Reddit: r/janetlang
 - Twitter: #janetlang
 
-### 贡献方式
+*** 贡献方式
 
 **代码贡献**
 1. Fork 项目
@@ -105,22 +105,22 @@
 - 分享经验
 - 创建内容
 
-## C.5 开发工具
+** C.5 开发工具
 
-### 编辑器支持
+*** 编辑器支持
 
 **Emacs**
-```elisp
+#+begin_src elisp
 ;; janet-mode
 (use-package janet-mode
   :ensure t)
-```
+#+end_src
 
 **Vim/Neovim**
-```vim
+#+begin_src vim
 " janet.vim
 Plug 'janet-lang/janet.vim'
-```
+#+end_src
 
 **VS Code**
 - 扩展: "Janet Language Support"
@@ -132,16 +132,16 @@ Plug 'janet-lang/janet.vim'
 **Atom**
 - Package: language-janet
 
-### REPL 工具
+*** REPL 工具
 
 **Janet REPL 增强**
-```bash
+#+begin_src bash
 # 安装 rlwrap 获得更好的 REPL 体验
 rlwrap janet
-```
+#+end_src
 
 **JPM 工具**
-```bash
+#+begin_src bash
 # 项目管理
 jpm init
 jpm deps
@@ -150,13 +150,13 @@ jpm test
 
 # 文档生成
 jpm gendoc
-```
+#+end_src
 
-## C.6 调试和分析
+** C.6 调试和分析
 
-### 调试工具
+*** 调试工具
 
-```janet
+#+begin_src janet
 # 内置调试函数
 (debug/stack)        # 打印调用栈
 (debug/break)        # 设置断点
@@ -164,11 +164,11 @@ jpm gendoc
 
 # 追踪
 (setdyn :debug true)
-```
+#+end_src
 
-### 性能分析
+*** 性能分析
 
-```janet
+#+begin_src janet
 # 简单计时
 (def start (os/clock))
 # ... 代码 ...
@@ -181,13 +181,13 @@ jpm gendoc
          end# (os/clock)]
      (printf "Time: %.6fs" (/ (- end# start#) 1e9))
      result#))
-```
+#+end_src
 
-## C.7 部署和运维
+** C.7 部署和运维
 
-### Docker
+*** Docker
 
-```dockerfile
+#+begin_src dockerfile
 # Dockerfile
 FROM alpine:latest
 
@@ -197,11 +197,11 @@ WORKDIR /app
 COPY . .
 
 CMD ["janet", "main.janet"]
-```
+#+end_src
 
-### Systemd 服务
+*** Systemd 服务
 
-```ini
+#+begin_src ini
 # /etc/systemd/system/myapp.service
 [Unit]
 Description=My Janet Application
@@ -216,11 +216,11 @@ Restart=always
 
 [Install]
 WantedBy=multi-user.target
-```
+#+end_src
 
-## C.8 常见问题 (FAQ)
+** C.8 常见问题 (FAQ)
 
-### Q: Janet 适合什么场景？
+*** Q: Janet 适合什么场景？
 
 A: 
 - 系统脚本和自动化
@@ -229,7 +229,7 @@ A:
 - 快速原型
 - 命令行工具
 
-### Q: Janet 的性能如何？
+*** Q: Janet 的性能如何？
 
 A:
 - 启动非常快（毫秒级）
@@ -237,7 +237,7 @@ A:
 - 比 Python 快，比 C 慢
 - 可通过 FFI 调用 C 获得原生性能
 
-### Q: Janet vs Lua？
+*** Q: Janet vs Lua？
 
 A:
 - Janet 是 Lisp，Lua 类似 JavaScript
@@ -245,7 +245,7 @@ A:
 - Janet 内置网络、并发、PEG
 - Lua 生态更成熟
 
-### Q: 如何贡献？
+*** Q: 如何贡献？
 
 A:
 - 提交 bug 报告
@@ -254,7 +254,7 @@ A:
 - 开发库和工具
 - 帮助其他用户
 
-### Q: 有商业支持吗？
+*** Q: 有商业支持吗？
 
 A:
 - Janet 是开源项目
@@ -262,9 +262,9 @@ A:
 - 作者 Calvin Rose 活跃维护
 - 可通过 GitHub Sponsors 支持
 
-## C.9 相关项目
+** C.9 相关项目
 
-### Janet 相关
+*** Janet 相关
 
 **Jaylib** - Janet 的 Raylib 绑定
 - 2D/3D 游戏开发
@@ -278,54 +278,54 @@ A:
 - JSON, HTTP, 模板等
 - 官方维护
 
-### 灵感来源
+*** 灵感来源
 
 - **Clojure** - 语法和数据结构
 - **Lua** - 轻量级和嵌入性
 - **Scheme** - 简洁性
 - **Lisp** - S-表达式和宏
 
-## C.10 路线图
+** C.10 路线图
 
-### 当前稳定版本
+*** 当前稳定版本
 
 - Janet 1.34.0 (2024)
 - 稳定的 API
 - 活跃开发中
 
-### 未来计划
+*** 未来计划
 
 - 更多平台支持
 - 性能优化
 - 标准库扩展
 - 工具链改进
 
-## C.11 获取帮助
+** C.11 获取帮助
 
-### 提问渠道
+*** 提问渠道
 
 1. **GitHub Discussions** - 最好的提问地方
 2. **Gitter/Discord** - 实时交流
 3. **Stack Overflow** - 标签 `janet`
 
-### 提问技巧
+*** 提问技巧
 
 - 提供最小可复现示例
 - 说明预期和实际行为
 - 包含版本信息
 - 搜索已有问题
 
-## C.12 保持更新
+** C.12 保持更新
 
-### 关注更新
+*** 关注更新
 
 - **GitHub**: Watch janet 仓库
 - **博客**: 订阅官方博客
 - **社交**: 关注 #janetlang
 
-### 升级建议
+*** 升级建议
 
-```bash
+#+begin_src bash
 # 检查版本
 janet -v
 
@@ -338,9 +338,9 @@ sudo make install
 # 或使用包管理器
 brew upgrade janet  # macOS
 # 等
-```
+#+end_src
 
-## C.13 致谢
+** C.13 致谢
 
 感谢所有为 Janet 做出贡献的人：
 
@@ -348,7 +348,7 @@ brew upgrade janet  # macOS
 - **Janet 社区** - 贡献者和用户
 - **Lisp 社区** - 长期的影响和启发
 
-## C.14 许可证
+** C.14 许可证
 
 Janet 采用 **MIT 许可证**，非常自由：
 - 商业使用 ✓
@@ -356,7 +356,7 @@ Janet 采用 **MIT 许可证**，非常自由：
 - 分发 ✓
 - 私有使用 ✓
 
-## C.15 总结
+** C.15 总结
 
 Janet 是一门年轻但成熟的语言，具有：
 - ✓ 活跃的社区
@@ -368,4 +368,4 @@ Janet 是一门年轻但成熟的语言，具有：
 
 ---
 
-← [附录 A：与其他 Lisp 的详细对比](./appendix-a-lisp-comparison.md) | [返回目录](./README.md)
+← [[./appendix-a-lisp-comparison.org][附录 A：与其他 Lisp 的详细对比]] | [[./README.org][返回目录]]

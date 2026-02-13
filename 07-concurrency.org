@@ -1,14 +1,14 @@
-# 第七章：并发编程
+* 第七章：并发编程
 
 Janet 的并发模型建立在 **纤程（Fibers）** 之上，这是一种轻量级协程机制。与其他 Lisp 方言相比，Janet 的并发更接近 Lua 的协程或 Go 的 goroutines，而不是传统的线程模型。
 
-## 7.1 Fibers 基础
+** 7.1 Fibers 基础
 
-### 什么是 Fiber？
+*** 什么是 Fiber？
 
 Fiber 是 Janet 中的协程（coroutine），是一种可以暂停和恢复执行的函数。与线程不同，Fibers 是协作式的，不会被抢占。
 
-```janet
+#+begin_src janet
 # 创建一个简单的 fiber
 (def my-fiber 
   (fiber/new 
@@ -23,11 +23,11 @@ Fiber 是 Janet 中的协程（coroutine），是一种可以暂停和恢复执�
 (resume my-fiber)  # 打印 "Step 1"，返回 42
 (resume my-fiber)  # 打印 "Step 2"，返回 100
 (resume my-fiber)  # 打印 "Step 3"，fiber 完成
-```
+#+end_src
 
-### Fiber 的生命周期
+*** Fiber 的生命周期
 
-```janet
+#+begin_src janet
 # Fiber 状态
 (fiber/status my-fiber)
 # 返回值：
@@ -38,13 +38,13 @@ Fiber 是 Janet 中的协程（coroutine），是一种可以暂停和恢复执�
 
 # 检查 fiber 是否可以恢复
 (fiber/can-resume? my-fiber)
-```
+#+end_src
 
-### 与 Scheme call/cc 的对比
+*** 与 Scheme call/cc 的对比
 
 熟悉 Scheme 的开发者会注意到 fibers 提供了类似 `call/cc` 的能力，但更加受限和实用：
 
-```janet
+#+begin_src janet
 # Scheme call/cc 风格（概念性）
 # (call/cc (lambda (k) ... (k value) ...))
 
@@ -57,7 +57,7 @@ Fiber 是 Janet 中的协程（coroutine），是一种可以暂停和恢复执�
 
 (resume fiber)           # 返回 :need-input
 (resume fiber 20)        # 传入 20，返回 30
-```
+#+end_src
 
 **主要区别：**
 
@@ -65,11 +65,11 @@ Fiber 是 Janet 中的协程（coroutine），是一种可以暂停和恢复执�
 2. **单向传递** - yield 返回到调用者，不能像 call/cc 那样随意跳转
 3. **更易理解** - 明确的暂停/恢复语义
 
-## 7.2 Fiber 的通信模式
+** 7.2 Fiber 的通信模式
 
-### 值传递
+*** 值传递
 
-```janet
+#+begin_src janet
 # 通过 yield 和 resume 传递值
 (def echo-fiber
   (fiber/new
@@ -81,11 +81,11 @@ Fiber 是 Janet 中的协程（coroutine），是一种可以暂停和恢复执�
 (resume echo-fiber)           # 返回 :waiting
 (resume echo-fiber "Hello")   # 打印 "Received: Hello"
 (resume echo-fiber "World")   # 打印 "Received: World"
-```
+#+end_src
 
-### 生成器模式
+*** 生成器模式
 
-```janet
+#+begin_src janet
 # 实现一个简单的生成器
 (defn range-gen [n]
   (fiber/new
@@ -102,11 +102,11 @@ Fiber 是 Janet 中的协程（coroutine），是一种可以暂停和恢复执�
 # 使用 each 消费 fiber
 (each x (range-gen 5)
   (print x))
-```
+#+end_src
 
-### 与 Go Goroutines 的对比
+*** 与 Go Goroutines 的对比
 
-```janet
+#+begin_src janet
 # Go 风格 (概念性)
 # go func() {
 #     for msg := range ch {
@@ -126,7 +126,7 @@ Fiber 是 Janet 中的协程（coroutine），是一种可以暂停和恢复执�
 (def w (worker))
 (resume w)
 (resume w {:task "data"})
-```
+#+end_src
 
 **主要区别：**
 
@@ -134,11 +134,11 @@ Fiber 是 Janet 中的协程（coroutine），是一种可以暂停和恢复执�
 2. **并行性** - Go goroutines 可以真正并行，Janet fibers 是协作式的
 3. **通信** - Go 用 channels，Janet 用 yield/resume 或事件循环
 
-## 7.3 错误处理
+** 7.3 错误处理
 
-### Fiber 中的异常
+*** Fiber 中的异常
 
-```janet
+#+begin_src janet
 (def faulty-fiber
   (fiber/new
     (fn []
@@ -154,25 +154,25 @@ Fiber 是 Janet 中的协程（coroutine），是一种可以暂停和恢复执�
 
 # fiber 状态变为 :dead
 (fiber/status faulty-fiber)  # :dead
-```
+#+end_src
 
-### 安全恢复
+*** 安全恢复
 
-```janet
+#+begin_src janet
 # 使用 fiber/status 检查
 (defn safe-resume [f &opt val]
   (if (= :alive (fiber/status f))
     (resume f val)
     nil))
-```
+#+end_src
 
-## 7.4 事件循环与异步 I/O
+** 7.4 事件循环与异步 I/O
 
-### ev 模块简介
+*** ev 模块简介
 
 Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的事件循环。
 
-```janet
+#+begin_src janet
 # 创建一个异步任务
 (ev/spawn
   (fn []
@@ -182,11 +182,11 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
 
 # 启动事件循环（通常在 main 中）
 # (ev/go (fn [] ...)) 会自动运行事件循环
-```
+#+end_src
 
-### 异步 Sleep
+*** 异步 Sleep
 
-```janet
+#+begin_src janet
 # 同步 sleep（阻塞）
 (os/sleep 1)
 
@@ -200,11 +200,11 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
       (print "Go!"))))
 
 (async-countdown)
-```
+#+end_src
 
-### 并发任务
+*** 并发任务
 
-```janet
+#+begin_src janet
 # 同时运行多个异步任务
 (ev/go
   (fn []
@@ -225,13 +225,13 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
       (array/push results (ev/take f)))
     
     (pp results)))
-```
+#+end_src
 
-## 7.5 Channel 模式
+** 7.5 Channel 模式
 
 虽然 Janet 没有内置 Go 风格的 channels，但可以通过 `ev/chan` 实现类似的功能：
 
-```janet
+#+begin_src janet
 # 创建一个 channel
 (def ch (ev/chan))
 
@@ -251,11 +251,11 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
       (if (nil? val)
         (break)
         (print "Received: " val)))))
-```
+#+end_src
 
-### Channel 缓冲
+*** Channel 缓冲
 
-```janet
+#+begin_src janet
 # 带缓冲的 channel
 (def buffered-ch (ev/chan 10))
 
@@ -272,13 +272,13 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
     (repeat 10
       (ev/sleep 0.5)
       (print "Got: " (ev/take buffered-ch)))))
-```
+#+end_src
 
-## 7.6 实战：Web 服务器
+** 7.6 实战：Web 服务器
 
 使用异步 I/O 构建简单的并发 web 服务器：
 
-```janet
+#+begin_src janet
 (import spork/netrepl)
 
 (defn handle-connection [stream]
@@ -312,13 +312,13 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
 
 # 启动服务器（在事件循环中）
 # (ev/go (fn [] (start-server 8080)))
-```
+#+end_src
 
-## 7.7 常见模式
+** 7.7 常见模式
 
-### 超时处理
+*** 超时处理
 
-```janet
+#+begin_src janet
 (defn with-timeout [f timeout]
   (def result (ev/chan 1))
   
@@ -351,11 +351,11 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
     (if (= status :timeout)
       (print "Task timed out!")
       (print "Result: " value))))
-```
+#+end_src
 
-### Fan-out/Fan-in
+*** Fan-out/Fan-in
 
-```janet
+#+begin_src janet
 # Fan-out: 将工作分发给多个 worker
 (defn fan-out [jobs num-workers]
   (def results (ev/chan (* 2 num-workers)))
@@ -388,11 +388,11 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
   (repeat n
     (array/push results (ev/take ch)))
   results)
-```
+#+end_src
 
-### Worker Pool
+*** Worker Pool
 
-```janet
+#+begin_src janet
 (defn worker-pool [num-workers work-fn]
   (def jobs (ev/chan 100))
   (def results (ev/chan 100))
@@ -428,13 +428,13 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
   (fn []
     (repeat 10
       (print "Result: " (ev/take (pool :results))))))
-```
+#+end_src
 
-## 7.8 常见陷阱
+** 7.8 常见陷阱
 
-### 陷阱 1：忘记事件循环
+*** 陷阱 1：忘记事件循环
 
-```janet
+#+begin_src janet
 # ❌ 错误：这不会执行
 (ev/spawn (fn [] (print "Hello")))
 # 需要事件循环运行
@@ -443,11 +443,11 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
 (ev/go
   (fn []
     (ev/spawn (fn [] (print "Hello")))))
-```
+#+end_src
 
-### 陷阱 2：死锁
+*** 陷阱 2：死锁
 
-```janet
+#+begin_src janet
 # ❌ 错误：死锁
 (def ch (ev/chan))
 (ev/take ch)  # 永远阻塞
@@ -456,11 +456,11 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
 (def ch (ev/chan))
 (ev/spawn (fn [] (ev/give ch 42)))
 (ev/take ch)  # 返回 42
-```
+#+end_src
 
-### 陷阱 3：未关闭的 Channel
+*** 陷阱 3：未关闭的 Channel
 
-```janet
+#+begin_src janet
 # ❌ 错误：生产者退出，但消费者还在等待
 (def ch (ev/chan))
 (ev/spawn
@@ -483,11 +483,11 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
     (for i 0 3
       (ev/give ch i))
     (ev/chan-close ch)))  # 关闭以通知消费者
-```
+#+end_src
 
-### 陷阱 4：混用同步和异步操作
+*** 陷阱 4：混用同步和异步操作
 
-```janet
+#+begin_src janet
 # ❌ 错误：在异步上下文中使用同步阻塞
 (ev/go
   (fn []
@@ -499,66 +499,66 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
   (fn []
     (ev/spawn (fn [] (ev/sleep 1)))  # 非阻塞
     (ev/spawn (fn [] (print "I run concurrently")))))
-```
+#+end_src
 
-## 7.9 与其他 Lisp 方言的对比
+** 7.9 与其他 Lisp 方言的对比
 
-### Common Lisp
+*** Common Lisp
 
-```lisp
+#+begin_src lisp
 ; Common Lisp - bordeaux-threads
 (bt:make-thread 
   (lambda () (format t "Hello~%")))
 
 ; 需要锁和条件变量来同步
 (defvar *lock* (bt:make-lock))
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - 更高级的抽象
 (ev/spawn (fn [] (print "Hello")))
 
 # 通过 channels 自动同步
 (def ch (ev/chan))
-```
+#+end_src
 
-### Clojure
+*** Clojure
 
-```clojure
+#+begin_src clojure
 ; Clojure - core.async
 (go
   (<! (timeout 1000))
   (println "Done"))
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - 类似但更简单
 (ev/go
   (fn []
     (ev/sleep 1)
     (print "Done")))
-```
+#+end_src
 
-### Scheme (Guile)
+*** Scheme (Guile)
 
-```scheme
+#+begin_src scheme
 ; Scheme - 使用 call/cc
 (call/cc
   (lambda (k)
     (k 42)))
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - 使用 fiber
 (def f (fiber/new (fn [] (yield 42))))
 (resume f)
-```
+#+end_src
 
-## 7.10 性能考虑
+** 7.10 性能考虑
 
-### Fiber 开销
+*** Fiber 开销
 
-```janet
+#+begin_src janet
 # Fibers 很轻量
 (time
   (do
@@ -566,11 +566,11 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
                   (fiber/new (fn [] i))))
     (map resume fibers)))
 # 创建和恢复 10000 个 fiber 通常只需几毫秒
-```
+#+end_src
 
-### 事件循环性能
+*** 事件循环性能
 
-```janet
+#+begin_src janet
 # 异步 I/O 适合高并发
 # 数千个并发连接通常没问题
 (defn benchmark-concurrency []
@@ -591,15 +591,15 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
       (map ev/take tasks)
       
       (print "Time: " (- (os/clock) start) " seconds"))))
-```
+#+end_src
 
-## 7.11 实践练习
+** 7.11 实践练习
 
-### 练习 1：生产者-消费者
+*** 练习 1：生产者-消费者
 
 实现一个生产者-消费者模型，使用 channel 在它们之间传递数据。
 
-```janet
+#+begin_src janet
 # 你的代码
 (defn producer [ch num-items]
   # 生成 num-items 个项目并发送到 ch
@@ -610,25 +610,25 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
   )
 
 # 测试：2 个生产者，3 个消费者
-```
+#+end_src
 
-### 练习 2：并行文件处理
+*** 练习 2：并行文件处理
 
 读取多个文件并并发处理它们的内容。
 
-```janet
+#+begin_src janet
 (defn process-files [filenames]
   # 为每个文件启动一个 fiber
   # 并发读取和处理
   # 返回所有结果
   )
-```
+#+end_src
 
-### 练习 3：速率限制器
+*** 练习 3：速率限制器
 
 实现一个速率限制器，限制每秒的操作次数。
 
-```janet
+#+begin_src janet
 (defn rate-limiter [max-per-second]
   # 返回一个函数，该函数在被调用时
   # 遵守速率限制
@@ -639,9 +639,9 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
 (for i 0 20
   (limiter)
   (print "Request " i))
-```
+#+end_src
 
-## 小结
+** 小结
 
 本章我们学习了：
 
@@ -652,7 +652,7 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
 - ✓ 实用的并发编程模式
 - ✓ 常见陷阱和性能考虑
 
-### 关键要点
+*** 关键要点
 
 1. **Fibers 是协作式的** - 不会被抢占，需要显式 yield
 2. **ev 模块提供事件循环** - 类似 Node.js 的异步模型
@@ -662,4 +662,4 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
 
 ---
 
-← [上一章：函数式编程](./06-functional-programming.md) | [返回目录](./README.md) | [下一章：FFI 与 C 互操作](./08-ffi-c-interop.md) →
+← [[./06-functional-programming.org][上一章：函数式编程]] | [[./README.org][返回目录]] | [[./08-ffi-c-interop.org][下一章：FFI 与 C 互操作]] →

@@ -1,10 +1,10 @@
-# 附录 A：与其他 Lisp 的详细对比
+* 附录 A：与其他 Lisp 的详细对比
 
 本附录详细对比 Janet 与其他主流 Lisp 方言，帮助你快速理解差异和相似之处。
 
-## A.1 Janet vs Common Lisp
+** A.1 Janet vs Common Lisp
 
-### A.1.1 语法差异
+*** A.1.1 语法差异
 
 | 特性 | Common Lisp | Janet |
 |------|-------------|-------|
@@ -17,9 +17,9 @@
 | Lambda | `(lambda (x) ...)` | `(fn [x] ...)` |
 | Let | `(let ((x 1)) ...)` | `(let [x 1] ...)` |
 
-### A.1.2 命名空间
+*** A.1.2 命名空间
 
-```lisp
+#+begin_src lisp
 ; Common Lisp - 两个命名空间
 (defun foo () 42)
 (let ((foo 10))
@@ -27,18 +27,18 @@
 
 (let ((foo 10))
   foo)    ; 访问变量，返回 10
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - 单一命名空间（类似 Scheme）
 (defn foo [] 42)
 (let [foo 10]
   (foo))  # 错误！foo 是数字
-```
+#+end_src
 
-### A.1.3 类型系统
+*** A.1.3 类型系统
 
-```lisp
+#+begin_src lisp
 ; Common Lisp - 丰富的数字类型
 42          ; fixnum
 10000000000 ; bignum
@@ -46,18 +46,18 @@
 #C(1 2)     ; complex
 
 (+ 1/2 1/3) ; => 5/6 (保持有理数)
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - 单一数字类型（双精度浮点）
 42
 10000000000
 (/ 22 7)    # => 3.142857... (浮点)
-```
+#+end_src
 
-### A.1.4 宏系统
+*** A.1.4 宏系统
 
-```lisp
+#+begin_src lisp
 ; Common Lisp - 强大的宏系统
 (defmacro when (condition &body body)
   `(if ,condition
@@ -65,9 +65,9 @@
 
 ; 宏展开
 (macroexpand-1 '(when (> x 0) (print x)))
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - 类似但更简单
 (defmacro when [condition & body]
   ~(if ,condition
@@ -75,11 +75,11 @@
 
 # 宏展开
 (macex1 '(when (> x 0) (print x)))
-```
+#+end_src
 
-### A.1.5 CLOS vs 无对象系统
+*** A.1.5 CLOS vs 无对象系统
 
-```lisp
+#+begin_src lisp
 ; Common Lisp - CLOS
 (defclass point ()
   ((x :initarg :x :accessor point-x)
@@ -88,9 +88,9 @@
 (defmethod distance ((p point))
   (sqrt (+ (* (point-x p) (point-x p))
            (* (point-y p) (point-y p)))))
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - 函数式方法
 (defn make-point [x y]
   {:x x :y y})
@@ -98,11 +98,11 @@
 (defn distance [p]
   (math/sqrt (+ (* (p :x) (p :x))
                 (* (p :y) (p :y)))))
-```
+#+end_src
 
-### A.1.6 错误处理
+*** A.1.6 错误处理
 
-```lisp
+#+begin_src lisp
 ; Common Lisp - 条件系统
 (handler-case
     (/ 1 0)
@@ -116,9 +116,9 @@
     (error "Something wrong")
   (use-value (value)
     value))
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - 简单的 try/catch
 (try
   (/ 1 0)
@@ -126,11 +126,11 @@
    (print "Error: " err)))
 
 # 没有内置的重启机制
-```
+#+end_src
 
-### A.1.7 并发模型
+*** A.1.7 并发模型
 
-```lisp
+#+begin_src lisp
 ; Common Lisp - 取决于实现
 ; SBCL: 原生线程
 (sb-thread:make-thread
@@ -139,58 +139,58 @@
 ; Bordeaux Threads (可移植)
 (bt:make-thread
   (lambda () (print "Hello")))
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - Fibers（协程）
 (def f (fiber/new
         (fn [] (print "Hello"))))
 (resume f)
-```
+#+end_src
 
-## A.2 Janet vs Scheme
+** A.2 Janet vs Scheme
 
-### A.2.1 语法相似性
+*** A.2.1 语法相似性
 
 Scheme 和 Janet 的语法更相似：
 
-```scheme
+#+begin_src scheme
 ; Scheme
 (define x 10)
 (define (square x) (* x x))
 (let ((x 1) (y 2)) (+ x y))
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet
 (def x 10)
 (defn square [x] (* x x))
 (let [x 1 y 2] (+ x y))
-```
+#+end_src
 
-### A.2.2 尾调用优化
+*** A.2.2 尾调用优化
 
 两者都支持尾调用优化：
 
-```scheme
+#+begin_src scheme
 ; Scheme
 (define (factorial n acc)
   (if (<= n 1)
       acc
       (factorial (- n 1) (* n acc))))
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet
 (defn factorial [n acc]
   (if (<= n 1)
     acc
     (factorial (- n 1) (* n acc))))
-```
+#+end_src
 
-### A.2.3 Continuation vs Fibers
+*** A.2.3 Continuation vs Fibers
 
-```scheme
+#+begin_src scheme
 ; Scheme - call/cc
 (define (generator)
   (let ((state 0))
@@ -199,9 +199,9 @@ Scheme 和 Janet 的语法更相似：
        (lambda (k)
          (set! state (+ state 1))
          state)))))
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - Fibers
 (defn generator []
   (var state 0)
@@ -210,29 +210,29 @@ Scheme 和 Janet 的语法更相似：
      (while true
        (set state (inc state))
        (yield state)))))
-```
+#+end_src
 
-### A.2.4 卫生宏
+*** A.2.4 卫生宏
 
-```scheme
+#+begin_src scheme
 ; Scheme - syntax-rules (卫生宏)
 (define-syntax when
   (syntax-rules ()
     ((when condition body ...)
      (if condition
          (begin body ...)))))
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - 默认卫生宏
 (defmacro when [condition & body]
   ~(if ,condition
        (do ,;body)))
-```
+#+end_src
 
-### A.2.5 数字塔
+*** A.2.5 数字塔
 
-```scheme
+#+begin_src scheme
 ; Scheme - 完整的数字塔
 42          ; exact integer
 3.14        ; inexact real
@@ -241,77 +241,77 @@ Scheme 和 Janet 的语法更相似：
 
 (exact? 42)  ; #t
 (exact? 3.14) ; #f
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - 简化的数字系统
 42
 3.14
 # 无有理数和复数支持
-```
+#+end_src
 
-## A.3 Janet vs Clojure
+** A.3 Janet vs Clojure
 
-### A.3.1 语法高度相似
+*** A.3.1 语法高度相似
 
 Janet 的语法最接近 Clojure：
 
-```clojure
+#+begin_src clojure
 ; Clojure
 (def x 10)
 (defn square [x] (* x x))
 (let [x 1 y 2] (+ x y))
 {:name "Alice" :age 30}
 [:a :b :c]
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - 几乎相同！
 (def x 10)
 (defn square [x] (* x x))
 (let [x 1 y 2] (+ x y))
 {:name "Alice" :age 30}
 [:a :b :c]
-```
+#+end_src
 
-### A.3.2 不可变性
+*** A.3.2 不可变性
 
-```clojure
+#+begin_src clojure
 ; Clojure - 默认不可变
 (def v [1 2 3])
 (conj v 4)  ; 返回新向量 [1 2 3 4]
 v           ; 仍是 [1 2 3]
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - 显式区分
 (def v [1 2 3])      # 不可变元组
 # (put v 0 99)       # 错误
 
 (def v @[1 2 3])     # 可变数组
 (put v 0 99)         # OK
-```
+#+end_src
 
-### A.3.3 持久化数据结构
+*** A.3.3 持久化数据结构
 
-```clojure
+#+begin_src clojure
 ; Clojure - 高效的持久化数据结构
 (def v1 (vec (range 1000000)))
 (def v2 (assoc v1 500000 :new))
 ; v2 与 v1 共享大部分结构
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - 简单复制
 (def v1 (seq [i :range [0 1000000]] i))
 (def v2 (array ;v1))
 (put v2 500000 :new)
 # v2 是完全独立的副本
-```
+#+end_src
 
-### A.3.4 并发模型
+*** A.3.4 并发模型
 
-```clojure
+#+begin_src clojure
 ; Clojure - 多种并发原语
 ; Atoms
 (def counter (atom 0))
@@ -325,20 +325,20 @@ v           ; 仍是 [1 2 3]
 ; Agents
 (def logger (agent []))
 (send logger conj "log entry")
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - Fibers
 (var counter 0)
 (def f (fiber/new
         (fn []
           (set counter (inc counter)))))
 (resume f)
-```
+#+end_src
 
-### A.3.5 Java 互操作 vs C FFI
+*** A.3.5 Java 互操作 vs C FFI
 
-```clojure
+#+begin_src clojure
 ; Clojure - Java 互操作
 (import java.util.Date)
 (def now (Date.))
@@ -346,20 +346,20 @@ v           ; 仍是 [1 2 3]
 
 ; 调用静态方法
 (Math/sqrt 16)
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - C FFI
 (ffi/native)
 (ffi/defbind sqrt :double [x :double])
 (sqrt 16)
-```
+#+end_src
 
-### A.3.6 线程宏
+*** A.3.6 线程宏
 
 两者都支持线程宏：
 
-```clojure
+#+begin_src clojure
 ; Clojure
 (-> 5
     (+ 3)
@@ -369,9 +369,9 @@ v           ; 仍是 [1 2 3]
 (->> [1 2 3 4]
      (map inc)
      (filter even?))
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet
 (-> 5
     (+ 3)
@@ -381,11 +381,11 @@ v           ; 仍是 [1 2 3]
 (->> [1 2 3 4]
      (map inc)
      (filter even?))
-```
+#+end_src
 
-## A.4 性能对比
+** A.4 性能对比
 
-### A.4.1 启动时间
+*** A.4.1 启动时间
 
 | Lisp | 启动时间 |
 |------|---------|
@@ -394,15 +394,15 @@ v           ; 仍是 [1 2 3]
 | Common Lisp (SBCL) | ~50ms |
 | Clojure | ~2000ms (JVM) |
 
-```bash
+#+begin_src bash
 # 测试
 time janet -e '(print "Hello")'
 time csi -e '(print "Hello")'
 time sbcl --eval '(print "Hello")' --quit
 time clojure -e '(println "Hello")'
-```
+#+end_src
 
-### A.4.2 运行时大小
+*** A.4.2 运行时大小
 
 | Lisp | 运行时大小 |
 |------|-----------|
@@ -411,11 +411,11 @@ time clojure -e '(println "Hello")'
 | Common Lisp (SBCL) | ~50MB |
 | Clojure | ~100MB (含 JVM) |
 
-### A.4.3 性能基准
+*** A.4.3 性能基准
 
 简单循环测试（1 亿次迭代）：
 
-```janet
+#+begin_src janet
 # Janet
 (defn test-loop []
   (var sum 0)
@@ -424,9 +424,9 @@ time clojure -e '(println "Hello")'
 
 (benchmark test-loop)
 # 约 2-3 秒
-```
+#+end_src
 
-```lisp
+#+begin_src lisp
 ; SBCL (编译后)
 (defun test-loop ()
   (let ((sum 0))
@@ -435,11 +435,11 @@ time clojure -e '(println "Hello")'
     sum))
 
 ; 约 0.1-0.2 秒（快很多！）
-```
+#+end_src
 
-## A.5 生态系统对比
+** A.5 生态系统对比
 
-### A.5.1 包管理
+*** A.5.1 包管理
 
 | Lisp | 包管理器 | 仓库 |
 |------|---------|------|
@@ -448,7 +448,7 @@ time clojure -e '(println "Hello")'
 | Clojure | Leiningen/deps | Clojars (~30000) |
 | Janet | JPM | ~200 包 |
 
-### A.5.2 标准库
+*** A.5.2 标准库
 
 | 特性 | CL | Scheme | Clojure | Janet |
 |------|----|----|---------|-------|
@@ -459,7 +459,7 @@ time clojure -e '(println "Hello")'
 | FFI | CFFI | 实现相关 | JNI/JNA | 内置 |
 | 正则 | 需库 | 需库 | Java | PEG |
 
-### A.5.3 工具链
+*** A.5.3 工具链
 
 | Lisp | REPL | 调试器 | 分析器 | IDE |
 |------|------|--------|--------|-----|
@@ -468,9 +468,9 @@ time clojure -e '(println "Hello")'
 | Clojure | ✓✓✓ | ✓✓ | ✓✓✓ | IntelliJ/Cursive |
 | Janet | ✓✓ | ✓ | ✓ | 多种编辑器 |
 
-## A.6 适用场景
+** A.6 适用场景
 
-### A.6.1 Common Lisp
+*** A.6.1 Common Lisp
 
 **最适合：**
 - 大型、长期维护的项目
@@ -483,7 +483,7 @@ time clojure -e '(println "Hello")'
 - 需要快速启动
 - 资源受限环境
 
-### A.6.2 Scheme
+*** A.6.2 Scheme
 
 **最适合：**
 - 教学和学习
@@ -496,7 +496,7 @@ time clojure -e '(println "Hello")'
 - 需要丰富的标准库
 - 商业支持
 
-### A.6.3 Clojure
+*** A.6.3 Clojure
 
 **最适合：**
 - 数据处理和分析
@@ -509,7 +509,7 @@ time clojure -e '(println "Hello")'
 - 资源受限环境
 - 系统级编程
 
-### A.6.4 Janet
+*** A.6.4 Janet
 
 **最适合：**
 - 系统脚本和工具
@@ -523,9 +523,9 @@ time clojure -e '(println "Hello")'
 - 需要丰富的第三方库
 - 大型企业应用
 
-## A.7 迁移指南
+** A.7 迁移指南
 
-### A.7.1 从 Common Lisp
+*** A.7.1 从 Common Lisp
 
 关键差异：
 1. 单一命名空间
@@ -538,7 +538,7 @@ time clojure -e '(println "Hello")'
 - 用数据结构代替类层次
 - 简化错误处理逻辑
 
-### A.7.2 从 Scheme
+*** A.7.2 从 Scheme
 
 关键差异：
 1. 语法更接近 Clojure
@@ -550,7 +550,7 @@ time clojure -e '(println "Hello")'
 - 利用内置的网络和 PEG
 - 使用 JPM 管理包
 
-### A.7.3 从 Clojure
+*** A.7.3 从 Clojure
 
 关键差异：
 1. 非持久化数据结构
@@ -564,9 +564,9 @@ time clojure -e '(println "Hello")'
 - 用 FFI 代替 Java 互操作
 - 重构并发代码
 
-## A.8 总结
+** A.8 总结
 
-### Janet 的定位
+*** Janet 的定位
 
 Janet 是：
 - **Lisp 家族**的现代成员
@@ -574,7 +574,7 @@ Janet 是：
 - **Lua 定位**的 Lisp 版本
 - **系统编程**的函数式选择
 
-### 选择建议
+*** 选择建议
 
 选择 Janet 如果你：
 - ✓ 需要轻量级的 Lisp
@@ -590,4 +590,4 @@ Janet 是：
 
 ---
 
-← [上一章：实战项目](./14-practical-projects.md) | [返回目录](./README.md) | [附录 B：核心 API 速查](./appendix-b-api-reference.md) →
+← [[./14-practical-projects.org][上一章：实战项目]] | [[./README.org][返回目录]] | [[./appendix-b-api-reference.org][附录 B：核心 API 速查]] →

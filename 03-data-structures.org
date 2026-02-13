@@ -1,12 +1,12 @@
-# 第三章：数据结构与类型系统
+* 第三章：数据结构与类型系统
 
 Janet 提供了丰富的数据结构，与 Clojure 非常相似。理解可变和不可变数据结构的区别是掌握 Janet 的关键。
 
-## 3.1 类型概览
+** 3.1 类型概览
 
-### 基本类型层次
+*** 基本类型层次
 
-```janet
+#+begin_src janet
 # 标量类型（Scalar Types）
 nil             # 空值
 true false      # 布尔值
@@ -28,11 +28,11 @@ true false      # 布尔值
 (fn [x] x)      # 函数 (Function)
 (coro ...)      # 纤程 (Fiber)
 (peg/compile ...)  # PEG (Parser Expression Grammar)
-```
+#+end_src
 
-### 类型检查
+*** 类型检查
 
-```janet
+#+begin_src janet
 # 类型检查函数
 (type 42)           # => :number
 (type "hello")      # => :string
@@ -56,15 +56,15 @@ true false      # 布尔值
 (dictionary? {:a 1})  # => true (结构体或表)
 (nil? nil)          # => true
 (empty? [])         # => true
-```
+#+end_src
 
-## 3.2 数字（Numbers）
+** 3.2 数字（Numbers）
 
-### 数字类型
+*** 数字类型
 
 Janet 只有一种数字类型：双精度浮点数（IEEE 754）。但它可以精确表示 53 位整数。
 
-```janet
+#+begin_src janet
 # 整数表示
 42
 -17
@@ -99,11 +99,11 @@ Janet 只有一种数字类型：双精度浮点数（IEEE 754）。但它可以
 (math/sqrt 16)      # => 4
 (math/pow 2 8)      # => 256
 (math/sin (/ math/pi 2))  # => 1
-```
+#+end_src
 
-### 数字的精度问题
+*** 数字的精度问题
 
-```janet
+#+begin_src janet
 # 整数精度（53 位）
 (= (+ 9007199254740992 1) 9007199254740992)  # => true!
 # 超出精度范围
@@ -118,9 +118,9 @@ Janet 只有一种数字类型：双精度浮点数（IEEE 754）。但它可以
   (< (math/abs (- a b)) epsilon))
 
 (approx= 0.3 (+ 0.1 0.2))  # => true
-```
+#+end_src
 
-### 与其他 Lisp 的数字系统对比
+*** 与其他 Lisp 的数字系统对比
 
 | Lisp | 整数 | 浮点数 | 有理数 | 复数 | 任意精度 |
 |------|------|--------|--------|------|----------|
@@ -131,11 +131,11 @@ Janet 只有一种数字类型：双精度浮点数（IEEE 754）。但它可以
 
 Janet 的数字系统更简单，但对于大多数系统编程已足够。
 
-## 3.3 字符串与缓冲区
+** 3.3 字符串与缓冲区
 
-### 不可变字符串
+*** 不可变字符串
 
-```janet
+#+begin_src janet
 # 字符串字面量
 "hello world"
 "multi\nline\nstring"
@@ -164,13 +164,13 @@ with preserved formatting
 # 字符串切片
 (string/slice "hello" 0 3)   # => "hel"
 (string/slice "hello" 2)     # => "llo"
-```
+#+end_src
 
-### 可变缓冲区
+*** 可变缓冲区
 
 缓冲区是可变的字节数组，用于高效的字符串构建：
 
-```janet
+#+begin_src janet
 # 创建缓冲区
 (def buf @"")
 (def buf2 @"initial")
@@ -194,11 +194,11 @@ buf  # => @"hello world"
 
 # 清空缓冲区
 (buffer/clear buf)
-```
+#+end_src
 
-### 字符串格式化
+*** 字符串格式化
 
-```janet
+#+begin_src janet
 # string/format (类似 printf)
 (string/format "Hello, %s!" "World")  # => "Hello, World!"
 (string/format "Number: %d" 42)       # => "Number: 42"
@@ -218,15 +218,15 @@ buf  # => @"hello world"
 
 (def name "Alice")
 (str "Hello, " name "!")  # => "Hello, Alice!"
-```
+#+end_src
 
-## 3.4 符号与关键字
+** 3.4 符号与关键字
 
-### 符号（Symbols）
+*** 符号（Symbols）
 
 符号是标识符，用于变量名和函数名：
 
-```janet
+#+begin_src janet
 # 符号字面量
 'x
 'my-variable
@@ -246,13 +246,13 @@ buf  # => @"hello world"
 
 # 关键字转符号
 (symbol :keyword)         # => keyword
-```
+#+end_src
 
-### 关键字（Keywords）
+*** 关键字（Keywords）
 
 关键字是自求值的符号，常用于映射的键：
 
-```janet
+#+begin_src janet
 # 关键字字面量
 :name
 :age
@@ -274,11 +274,11 @@ buf  # => @"hello world"
 # 转换
 (keyword 'sym)            # => :sym
 (symbol :key)             # => sym
-```
+#+end_src
 
-### 与 Common Lisp/Clojure 的对比
+*** 与 Common Lisp/Clojure 的对比
 
-```lisp
+#+begin_src lisp
 ; Common Lisp - 关键字在 keyword 包中
 :keyword  ; => :KEYWORD (大写)
 (keywordp :keyword)  ; => T
@@ -287,22 +287,22 @@ buf  # => @"hello world"
 :keyword
 (keyword? :keyword)  ; => true
 (:keyword {:keyword "value"})  ; => "value"
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - 与 Clojure 非常相似
 :keyword
 (keyword? :keyword)  # => true
 (:keyword {:keyword "value"})  # => "value"
-```
+#+end_src
 
-## 3.5 元组（Tuples）- 不可变序列
+** 3.5 元组（Tuples）- 不可变序列
 
-### 元组基础
+*** 元组基础
 
 元组是不可变的、有序的集合：
 
-```janet
+#+begin_src janet
 # 创建元组
 [1 2 3]
 (tuple 1 2 3)
@@ -328,11 +328,11 @@ buf  # => @"hello world"
 # 元组是不可变的
 (def t [1 2 3])
 # (put t 0 99)  # 错误！不能修改元组
-```
+#+end_src
 
-### 元组的结构化绑定
+*** 元组的结构化绑定
 
-```janet
+#+begin_src janet
 # 解构元组
 (let [[a b c] [1 2 3]]
   (+ a b c))  # => 6
@@ -348,11 +348,11 @@ buf  # => @"hello world"
 # 忽略部分元素
 (let [[a _ c] [1 2 3]]
   (+ a c))  # => 4
-```
+#+end_src
 
-### 元组操作
+*** 元组操作
 
-```janet
+#+begin_src janet
 # 连接（创建新元组）
 (tuple/join [1 2] [3 4])  # => [1 2 3 4]
 (tuple ;[1 2] ;[3 4])     # => (1 2 3 4)
@@ -366,15 +366,15 @@ buf  # => @"hello world"
 
 # 折叠
 (reduce + 0 [1 2 3 4 5])  # => 15
-```
+#+end_src
 
-## 3.6 数组（Arrays）- 可变序列
+** 3.6 数组（Arrays）- 可变序列
 
-### 数组基础
+*** 数组基础
 
 数组是可变的、有序的集合：
 
-```janet
+#+begin_src janet
 # 创建数组
 @[1 2 3]
 (array 1 2 3)
@@ -398,11 +398,11 @@ arr                  # => @[2 3]
 # 插入元素
 (array/insert arr 0 1)  # 在索引0插入1
 arr                     # => @[1 2 3]
-```
+#+end_src
 
-### 数组操作
+*** 数组操作
 
-```janet
+#+begin_src janet
 # 连接
 (array/concat @[1 2] @[3 4])  # => @[1 2 3 4]
 
@@ -421,11 +421,11 @@ arr                     # => @[1 2 3]
 
 # 去重（需要排序）
 (distinct @[1 2 2 3 3 3])  # => @[1 2 3]
-```
+#+end_src
 
-### 数组 vs 元组
+*** 数组 vs 元组
 
-```janet
+#+begin_src janet
 # 性能对比
 # 元组：
 # - 创建快
@@ -440,15 +440,15 @@ arr                     # => @[1 2 3]
 # 转换
 (tuple ;@[1 2 3])   # 数组 => 元组
 (array ;[1 2 3])    # 元组 => 数组
-```
+#+end_src
 
-## 3.7 结构体（Structs）- 不可变映射
+** 3.7 结构体（Structs）- 不可变映射
 
-### 结构体基础
+*** 结构体基础
 
 结构体是不可变的键值对集合：
 
-```janet
+#+begin_src janet
 # 创建结构体
 {:name "Alice" :age 30}
 (struct :name "Alice" :age 30)
@@ -462,11 +462,11 @@ arr                     # => @[1 2 3]
 
 # 结构体是不可变的
 # (put person :age 31)  # 错误！
-```
+#+end_src
 
-### 结构体操作
+*** 结构体操作
 
-```janet
+#+begin_src janet
 # 合并（创建新结构体）
 (merge {:a 1} {:b 2})  # => {:a 1 :b 2}
 (merge {:a 1 :b 2} {:b 3})  # => {:a 1 :b 3} (后者覆盖)
@@ -485,11 +485,11 @@ arr                     # => @[1 2 3]
   (merge dict {key (f (get dict key))}))
 
 (update {:count 5} :count inc)  # => {:count 6}
-```
+#+end_src
 
-### 结构体的解构
+*** 结构体的解构
 
-```janet
+#+begin_src janet
 # 解构结构体
 (let [{:name name :age age} {:name "Alice" :age 30}]
   (string name " is " age))  # => "Alice is 30"
@@ -504,15 +504,15 @@ arr                     # => @[1 2 3]
 
 (greet)              # => "Hello, Guest"
 (greet :name "Bob")  # => "Hello, Bob"
-```
+#+end_src
 
-## 3.8 表（Tables）- 可变映射
+** 3.8 表（Tables）- 可变映射
 
-### 表基础
+*** 表基础
 
 表是可变的键值对集合：
 
-```janet
+#+begin_src janet
 # 创建表
 @{:name "Alice" :age 30}
 (table :name "Alice" :age 30)
@@ -526,11 +526,11 @@ person  # => @{:name "Alice" :age 31 :city "NYC"}
 
 # 删除键
 (put person :city nil)  # 删除 :city
-```
+#+end_src
 
-### 表操作
+*** 表操作
 
-```janet
+#+begin_src janet
 # 合并（修改第一个表）
 (def t1 @{:a 1})
 (merge-into t1 @{:b 2})
@@ -549,11 +549,11 @@ t1  # => @{:a 1 :b 2}
   freq)
 
 (frequencies [1 2 2 3 3 3])  # => @{1 1 2 2 3 3}
-```
+#+end_src
 
-### 表 vs 结构体
+*** 表 vs 结构体
 
-```janet
+#+begin_src janet
 # 使用原则：
 # - 默认使用结构体（不可变，更安全）
 # - 需要修改时使用表
@@ -562,13 +562,13 @@ t1  # => @{:a 1 :b 2}
 # 转换
 (table ;(pairs {:a 1 :b 2}))  # 结构体 => 表
 (struct ;(pairs @{:a 1 :b 2}))  # 表 => 结构体
-```
+#+end_src
 
-## 3.9 集合通用操作
+** 3.9 集合通用操作
 
-### 序列操作（适用于所有集合）
+*** 序列操作（适用于所有集合）
 
-```janet
+#+begin_src janet
 # map - 映射
 (map inc [1 2 3])           # => @[2 3 4]
 (map + [1 2 3] [4 5 6])     # => @[5 7 9]
@@ -594,11 +594,11 @@ t1  # => @{:a 1 :b 2}
       :when (even? x)]
   (* x x))
 # => @[4]
-```
+#+end_src
 
-### 高级序列操作
+*** 高级序列操作
 
-```janet
+#+begin_src janet
 # take - 取前n个
 (take 3 [1 2 3 4 5])        # => @[1 2 3]
 
@@ -619,13 +619,13 @@ t1  # => @{:a 1 :b 2}
 
 # flatten - 扁平化
 (flatten [[1 2] [3 4] [5]])  # => @[1 2 3 4 5]
-```
+#+end_src
 
-## 3.10 惰性序列与生成器
+** 3.10 惰性序列与生成器
 
-### 生成器（Generators）
+*** 生成器（Generators）
 
-```janet
+#+begin_src janet
 # 使用 generate 创建惰性序列
 (defn naturals []
   (generate [n 0]
@@ -655,11 +655,11 @@ t1  # => @{:a 1 :b 2}
       (set n (+ n 2)))))
 
 (take 5 (evens))  # => @[0 2 4 6 8]
-```
+#+end_src
 
-### 纤程（Fibers）作为生成器
+*** 纤程（Fibers）作为生成器
 
-```janet
+#+begin_src janet
 # 使用纤程实现生成器
 (defn make-generator [f]
   (fiber/new f))
@@ -674,13 +674,13 @@ t1  # => @{:a 1 :b 2}
 (resume gen)  # => 2
 (resume gen)  # => 3
 (resume gen)  # => nil (完成)
-```
+#+end_src
 
-## 3.11 模式匹配
+** 3.11 模式匹配
 
-### Match 表达式
+*** Match 表达式
 
-```janet
+#+begin_src janet
 # 基本模式匹配
 (defn describe [x]
   (match x
@@ -712,11 +712,11 @@ t1  # => @{:a 1 :b 2}
   {:type :circle :radius r} (string "Circle with radius " r)
   {:type :rectangle :width w :height h} (string "Rectangle " w "x" h)
   _ "Unknown shape")
-```
+#+end_src
 
-## 3.12 与其他 Lisp 的数据结构对比
+** 3.12 与其他 Lisp 的数据结构对比
 
-### 总体对比
+*** 总体对比
 
 | 数据结构 | Common Lisp | Scheme | Clojure | Janet |
 |----------|-------------|--------|---------|-------|
@@ -727,20 +727,20 @@ t1  # => @{:a 1 :b 2}
 | 可变性 | 默认可变 | 默认可变 | 默认不可变 | 明确区分 |
 | 持久化 | 否 | 否 | 是 | 否 |
 
-### Janet 的设计哲学
+*** Janet 的设计哲学
 
 1. **明确的可变性** - `@` 前缀表示可变，清晰明了
 2. **简单而非持久化** - 不像 Clojure 的持久化数据结构，简单复制
 3. **性能优先** - 数组和表的性能优于不可变版本
 4. **实用主义** - 提供最常用的数据结构，避免过度设计
 
-## 3.13 实践练习
+** 3.13 实践练习
 
-### 练习 1：数据转换
+*** 练习 1：数据转换
 
 实现一个函数，将嵌套的结构体转换为表：
 
-```janet
+#+begin_src janet
 (defn struct->table [s]
   # TODO: 递归转换所有嵌套的结构体为表
   )
@@ -748,36 +748,36 @@ t1  # => @{:a 1 :b 2}
 # 测试
 (struct->table {:a 1 :b {:c 2}})
 # => @{:a 1 :b @{:c 2}}
-```
+#+end_src
 
-### 练习 2：频率分析
+*** 练习 2：频率分析
 
 实现一个函数，找出数组中出现最多的元素：
 
-```janet
+#+begin_src janet
 (defn most-frequent [arr]
   # TODO
   )
 
 (most-frequent [1 2 2 3 3 3])  # => 3
-```
+#+end_src
 
-### 练习 3：惰性序列
+*** 练习 3：惰性序列
 
 实现一个埃拉托斯特尼筛法的素数生成器：
 
-```janet
+#+begin_src janet
 (defn primes []
   # TODO: 返回无限素数序列
   )
 
 (take 10 (primes))  # => @[2 3 5 7 11 13 17 19 23 29]
-```
+#+end_src
 
 <details>
 <summary>参考答案</summary>
 
-```janet
+#+begin_src janet
 (defn primes []
   (generate [n 2 seen @{}]
     (when (not (seen n))
@@ -788,10 +788,10 @@ t1  # => @{:a 1 :b 2}
         (put seen k true)
         (set k (+ k n))))
     (set n (inc n))))
-```
+#+end_src
 </details>
 
-## 3.14 总结
+** 3.14 总结
 
 本章我们学习了：
 
@@ -802,7 +802,7 @@ t1  # => @{:a 1 :b 2}
 - ✓ 序列操作和生成器
 - ✓ 模式匹配
 
-### 关键要点
+*** 关键要点
 
 1. **@ 前缀表示可变** - 清晰的命名约定
 2. **默认不可变** - 鼓励函数式编程
@@ -812,4 +812,4 @@ t1  # => @{:a 1 :b 2}
 
 ---
 
-← [上一章：核心语言特性](./02-core-language.md) | [返回目录](./README.md) | [下一章：函数式编程](./04-functional-programming.md) →
+← [[./02-core-language.org][上一章：核心语言特性]] | [[./README.org][返回目录]] | [[./04-functional-programming.org][下一章：函数式编程]] →
