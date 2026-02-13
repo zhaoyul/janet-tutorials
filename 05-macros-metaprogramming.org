@@ -1,12 +1,12 @@
-# 第五章：宏与元编程
+* 第五章：宏与元编程
 
 宏是 Lisp 的灵魂。Janet 的宏系统继承了 Lisp 的传统，同时加入了现代特性。
 
-## 5.1 宏基础
+** 5.1 宏基础
 
-### 为什么需要宏？
+*** 为什么需要宏？
 
-```janet
+#+begin_src janet
 # 问题：想写这样的代码
 (unless (< x 0)
   (print "x is non-negative"))
@@ -21,11 +21,11 @@
 (defmacro unless [condition & body]
   ~(if (not ,condition)
        (do ,;body)))
-```
+#+end_src
 
-### 第一个宏
+*** 第一个宏
 
-```janet
+#+begin_src janet
 # 简单的宏
 (defmacro when-debug [& body]
   (if (os/getenv "DEBUG")
@@ -40,13 +40,13 @@
 (macex1 '(when-debug (print "test")))
 # 如果 DEBUG=1: (do (print "test"))
 # 否则: nil
-```
+#+end_src
 
-## 5.2 准引用与反引用
+** 5.2 准引用与反引用
 
-### 基本语法
+*** 基本语法
 
-```janet
+#+begin_src janet
 # quote (引用) - 阻止求值
 '(+ 1 2)  # => (+ 1 2) 不求值
 
@@ -60,11 +60,11 @@
 # unquote-splicing (反引用展开)
 (def nums [2 3 4])
 ~(+ 1 ,;nums)  # => (+ 1 2 3 4)
-```
+#+end_src
 
-### 构建代码
+*** 构建代码
 
-```janet
+#+begin_src janet
 # 构建函数调用
 (defmacro make-adder [n]
   ~(fn [x] (+ x ,n)))
@@ -79,13 +79,13 @@
     (array/push result condition)
     (array/push result action))
   result)
-```
+#+end_src
 
-## 5.3 常见宏模式
+** 5.3 常见宏模式
 
-### 控制流宏
+*** 控制流宏
 
-```janet
+#+begin_src janet
 # unless
 (defmacro unless [condition & body]
   ~(if (not ,condition)
@@ -109,11 +109,11 @@
     (array/push expanded ~(= ,expr ,pattern))
     (array/push expanded result))
   expanded)
-```
+#+end_src
 
-### 资源管理宏
+*** 资源管理宏
 
-```janet
+#+begin_src janet
 # with-open - 自动关闭资源
 (defmacro with-open [binding & body]
   (def [name resource] binding)
@@ -132,13 +132,13 @@
          end# (os/clock)]
      (printf "Elapsed: %.6f seconds" (/ (- end# start#) 1e9))
      result#))
-```
+#+end_src
 
-## 5.4 卫生宏
+** 5.4 卫生宏
 
-### 变量捕获问题
+*** 变量捕获问题
 
-```janet
+#+begin_src janet
 # 问题：变量名冲突
 (defmacro bad-swap [a b]
   ~(let [temp ,a]
@@ -155,24 +155,24 @@
   ~(let [,temp ,a]
      (set ,a ,b)
      (set ,b ,temp)))
-```
+#+end_src
 
-### with-syms 宏
+*** with-syms 宏
 
-```janet
+#+begin_src janet
 # 批量生成唯一符号
 (defmacro safe-inc [x]
   (with-syms [old]
     ~(let [,old ,x]
        (set ,x (inc ,old))
        ,old)))
-```
+#+end_src
 
-## 5.5 编译期计算
+** 5.5 编译期计算
 
-### 宏中的计算
+*** 宏中的计算
 
-```janet
+#+begin_src janet
 # 编译期计算
 (defmacro compile-time-calc []
   (def result (+ 1 2 3 4 5))  # 编译期执行
@@ -188,11 +188,11 @@
 # 使用
 (def config (embed-file "config.txt"))
 # config 是编译期嵌入的字符串
-```
+#+end_src
 
-### 代码生成
+*** 代码生成
 
-```janet
+#+begin_src janet
 # 批量定义函数
 (defmacro def-accessors [& fields]
   ~(do
@@ -207,13 +207,13 @@
 # 使用
 (def-accessors :name :age :email)
 # 生成: get-name, set-name, get-age, set-age, get-email, set-email
-```
+#+end_src
 
-## 5.6 与其他 Lisp 的宏对比
+** 5.6 与其他 Lisp 的宏对比
 
-### Common Lisp
+*** Common Lisp
 
-```lisp
+#+begin_src lisp
 ; Common Lisp
 (defmacro when (condition &body body)
   `(if ,condition
@@ -221,9 +221,9 @@
 
 ; 宏展开
 (macroexpand-1 '(when (> x 0) (print x)))
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet
 (defmacro when [condition & body]
   ~(if ,condition
@@ -231,31 +231,31 @@
 
 # 宏展开
 (macex1 '(when (> x 0) (print x)))
-```
+#+end_src
 
-### Scheme (syntax-rules)
+*** Scheme (syntax-rules)
 
-```scheme
+#+begin_src scheme
 ; Scheme
 (define-syntax when
   (syntax-rules ()
     ((when condition body ...)
      (if condition
          (begin body ...)))))
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet - 更灵活
 (defmacro when [condition & body]
   ~(if ,condition
        (do ,;body)))
-```
+#+end_src
 
-## 5.7 高级宏技巧
+** 5.7 高级宏技巧
 
-### 递归宏
+*** 递归宏
 
-```janet
+#+begin_src janet
 # 列表推导式
 (defmacro lcomp [expr & clauses]
   (defn expand [clauses]
@@ -281,11 +281,11 @@
   :for [x [1 2 3 4 5]]
   :when (even? x))
 # => [4 16]
-```
+#+end_src
 
-### 宏调用宏
+*** 宏调用宏
 
-```janet
+#+begin_src janet
 (defmacro defmethod [name params & body]
   ~(defn ,name ,params ,;body))
 
@@ -294,13 +294,13 @@
      ,;(map (fn [[method-name params & body]]
              ~(defmethod ,method-name ,params ,;body))
            methods)))
-```
+#+end_src
 
-## 5.8 宏调试
+** 5.8 宏调试
 
-### 宏展开
+*** 宏展开
 
-```janet
+#+begin_src janet
 # macex1 - 展开一层
 (macex1 '(when true (print "hi")))
 
@@ -309,11 +309,11 @@
 
 # 打印展开结果
 (pp (macex '(unless (< x 0) (print x))))
-```
+#+end_src
 
-### 调试技巧
+*** 调试技巧
 
-```janet
+#+begin_src janet
 # 在宏中打印
 (defmacro debug-macro [& args]
   (pp args)  # 查看参数
@@ -324,13 +324,13 @@
   (def code ~(print ,x))
   (pp code)  # 打印生成的代码
   code)
-```
+#+end_src
 
-## 5.9 实战示例
+** 5.9 实战示例
 
-### DSL：测试框架
+*** DSL：测试框架
 
-```janet
+#+begin_src janet
 (var *tests* @[])
 
 (defmacro deftest [name & body]
@@ -362,11 +362,11 @@
       (print "✓ Passed")
       ([err]
        (print "✗ Failed: " err)))))
-```
+#+end_src
 
-### DSL：SQL 查询构建器
+*** DSL：SQL 查询构建器
 
-```janet
+#+begin_src janet
 (defmacro select [& clauses]
   (var fields nil)
   (var from nil)
@@ -399,33 +399,33 @@
         :from "users"
         :where "age > 18")
 # => "SELECT name, age FROM users WHERE age > 18"
-```
+#+end_src
 
-## 5.10 练习
+** 5.10 练习
 
-### 练习 1：实现 and 宏
+*** 练习 1：实现 and 宏
 
-```janet
+#+begin_src janet
 (defmacro my-and [& exprs]
   # TODO: 实现短路求值的 and
   )
 
 (my-and true (print "evaluated") false (print "not evaluated"))
-```
+#+end_src
 
-### 练习 2：实现 do-times
+*** 练习 2：实现 do-times
 
-```janet
+#+begin_src janet
 (defmacro do-times [n & body]
   # TODO: 执行 body n 次
   )
 
 (do-times 3 (print "Hello"))
-```
+#+end_src
 
-### 练习 3：实现 ->?（可能的线程宏）
+*** 练习 3：实现 ->?（可能的线程宏）
 
-```janet
+#+begin_src janet
 (defmacro ->? [initial & forms]
   # TODO: 如果中间结果为 nil，停止执行
   )
@@ -434,9 +434,9 @@
      (get :user)
      (get :profile)   # nil
      (get :avatar))   # 不执行
-```
+#+end_src
 
-## 5.11 总结
+** 5.11 总结
 
 本章学习了：
 
@@ -448,7 +448,7 @@
 - ✓ 宏调试技巧
 - ✓ 实战 DSL 示例
 
-### 关键要点
+*** 关键要点
 
 1. **宏在编译期执行** - 代码即数据
 2. **准引用是核心** - `~` `,` `,;`
@@ -458,4 +458,4 @@
 
 ---
 
-← [上一章：函数式编程](./04-functional-programming.md) | [返回目录](./README.md) | [下一章：模块与项目组织](./06-modules-projects.md) →
+← [[./04-functional-programming.org][上一章：函数式编程]] | [[./README.org][返回目录]] | [[./06-modules-projects.org][下一章：模块与项目组织]] →

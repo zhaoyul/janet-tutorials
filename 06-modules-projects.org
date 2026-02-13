@@ -1,12 +1,12 @@
-# 第六章：模块与项目组织
+* 第六章：模块与项目组织
 
 Janet 提供了简洁而强大的模块系统，本章介绍如何组织和管理 Janet 项目。
 
-## 6.1 模块基础
+** 6.1 模块基础
 
-### 创建模块
+*** 创建模块
 
-```janet
+#+begin_src janet
 # mymodule.janet
 (defn add [x y] (+ x y))
 (defn multiply [x y] (* x y))
@@ -14,11 +14,11 @@ Janet 提供了简洁而强大的模块系统，本章介绍如何组织和管�
 (def PI 3.14159)
 
 # 导出符号（可选，默认导出所有）
-```
+#+end_src
 
-### 导入模块
+*** 导入模块
 
-```janet
+#+begin_src janet
 # 基本导入
 (import ./mymodule)
 (mymodule/add 1 2)
@@ -35,13 +35,13 @@ Janet 提供了简洁而强大的模块系统，本章介绍如何组织和管�
 (import ./mymodule :prefix "" :only [add multiply])
 (add 1 2)
 (multiply 3 4)
-```
+#+end_src
 
-## 6.2 模块路径
+** 6.2 模块路径
 
-### 路径解析
+*** 路径解析
 
-```janet
+#+begin_src janet
 # 相对路径
 (import ./mymodule)       # 当前目录
 (import ../utils/helper)  # 上级目录
@@ -51,11 +51,11 @@ Janet 提供了简洁而强大的模块系统，本章介绍如何组织和管�
 
 # 模块路径搜索（类似 Python 的 sys.path）
 (module/paths)  # 查看搜索路径
-```
+#+end_src
 
-### 模块加载机制
+*** 模块加载机制
 
-```janet
+#+begin_src janet
 # import 会：
 # 1. 查找模块文件
 # 2. 编译（如果需要）
@@ -67,13 +67,13 @@ Janet 提供了简洁而强大的模块系统，本章介绍如何组织和管�
 
 # 检查是否已加载
 (module/cache)  # 查看已加载模块
-```
+#+end_src
 
-## 6.3 私有与公共
+** 6.3 私有与公共
 
-### 私有定义
+*** 私有定义
 
-```janet
+#+begin_src janet
 # mymodule.janet
 
 # 公共函数
@@ -88,11 +88,11 @@ Janet 提供了简洁而强大的模块系统，本章介绍如何组织和管�
 (import ./mymodule)
 (mymodule/public-function 5)   # OK
 # (mymodule/private-helper 5)  # 不可访问（约定）
-```
+#+end_src
 
-### 显式导出
+*** 显式导出
 
-```janet
+#+begin_src janet
 # mymodule.janet
 
 (def- internal-value 42)  # 私有
@@ -104,13 +104,13 @@ Janet 提供了简洁而强大的模块系统，本章介绍如何组织和管�
    :multiply multiply})
 
 # 或使用 module/export
-```
+#+end_src
 
-## 6.4 包管理器 JPM
+** 6.4 包管理器 JPM
 
-### JPM 基础
+*** JPM 基础
 
-```bash
+#+begin_src bash
 # 初始化项目
 jpm init
 
@@ -128,11 +128,11 @@ jpm clean
 
 # 安装包
 jpm install spork
-```
+#+end_src
 
-### project.janet 文件
+*** project.janet 文件
 
-```janet
+#+begin_src janet
 # project.janet
 (declare-project
   :name "my-project"
@@ -155,16 +155,16 @@ jpm install spork
 (declare-source
   :source ["test"]
   :prefix "test")
-```
+#+end_src
 
-## 6.5 项目结构
+** 6.5 项目结构
 
-### 标准结构
+*** 标准结构
 
-```
+#+begin_src
 my-project/
 ├── project.janet       # 项目配置
-├── README.md
+├── README.org
 ├── LICENSE
 ├── .gitignore
 ├── src/
@@ -179,11 +179,11 @@ my-project/
 ├── examples/
 │   └── example.janet
 └── build/              # 构建产物（gitignore）
-```
+#+end_src
 
-### 示例项目
+*** 示例项目
 
-```janet
+#+begin_src janet
 # src/main.janet
 (import ./config)
 (import ./handlers)
@@ -205,13 +205,13 @@ my-project/
   (logger/info "Config loaded: " config)
   # 应用逻辑
   )
-```
+#+end_src
 
-## 6.6 常用库
+** 6.6 常用库
 
-### Spork - 标准扩展库
+*** Spork - 标准扩展库
 
-```janet
+#+begin_src janet
 # 安装
 # jpm install spork
 
@@ -231,13 +231,13 @@ my-project/
 # 模板引擎
 (import spork/temple)
 (temple/render "Hello {{ name }}" {:name "World"})
-```
+#+end_src
 
-想系统了解 Spork 的模块地图、安装方式和最佳实践，请参见 [第十五章：Spork 扩展标准库](./15-spork-library.md)。
+想系统了解 Spork 的模块地图、安装方式和最佳实践，请参见 [[./15-spork-library.org][第十五章：Spork 扩展标准库]]。
 
-### 其他有用的库
+*** 其他有用的库
 
-```janet
+#+begin_src janet
 # 数据库
 (import sqlite3)      # SQLite
 (import pq)           # PostgreSQL
@@ -253,21 +253,21 @@ my-project/
 # 实用工具
 (import sh)           # Shell 命令
 (import path)         # 路径操作
-```
+#+end_src
 
-## 6.7 构建和发布
+** 6.7 构建和发布
 
-### 构建可执行文件
+*** 构建可执行文件
 
-```janet
+#+begin_src janet
 # project.janet
 (declare-executable
   :name "myapp"
   :entry "src/main.janet"
   :install true)
-```
+#+end_src
 
-```bash
+#+begin_src bash
 # 构建
 jpm build
 
@@ -276,11 +276,11 @@ jpm install
 
 # 使用
 myapp --help
-```
+#+end_src
 
-### 发布到 Janet Package Manager
+*** 发布到 Janet Package Manager
 
-```bash
+#+begin_src bash
 # 1. 创建 GitHub 仓库
 # 2. 添加 project.janet
 # 3. 打标签
@@ -289,13 +289,13 @@ git push origin v1.0.0
 
 # 4. 提交到 Janet 包索引
 # https://github.com/janet-lang/pkgs
-```
+#+end_src
 
-## 6.8 开发工作流
+** 6.8 开发工作流
 
-### REPL 驱动开发
+*** REPL 驱动开发
 
-```janet
+#+begin_src janet
 # 在 REPL 中开发
 $ janet
 
@@ -309,11 +309,11 @@ janet> (mymodule/some-function)
 janet> (import ./src/mymodule :fresh true)
 
 # 继续开发...
-```
+#+end_src
 
-### 热重载
+*** 热重载
 
-```janet
+#+begin_src janet
 # dev.janet - 开发辅助脚本
 (var last-modified @{})
 
@@ -336,13 +336,13 @@ janet> (import ./src/mymodule :fresh true)
 
 # 使用
 (watch-and-reload ["./src/main.janet" "./src/utils.janet"])
-```
+#+end_src
 
-## 6.9 文档
+** 6.9 文档
 
-### 文档注释
+*** 文档注释
 
-```janet
+#+begin_src janet
 # 使用 doc 字符串
 (defn add
   "Add two numbers together.
@@ -358,24 +358,24 @@ janet> (import ./src/mymodule :fresh true)
 
 # 查看文档
 (doc add)
-```
+#+end_src
 
-### 生成文档
+*** 生成文档
 
-```bash
+#+begin_src bash
 # 使用 jpm
 jpm gendoc
 
 # 或使用 mdz
 jpm install mdz
 mdz src/*.janet
-```
+#+end_src
 
-## 6.10 测试
+** 6.10 测试
 
-### 单元测试
+*** 单元测试
 
-```janet
+#+begin_src janet
 # test/test-mymodule.janet
 (import testament :prefix "")
 (import ../src/mymodule)
@@ -390,11 +390,11 @@ mdz src/*.janet
 
 # 运行测试
 # jpm test
-```
+#+end_src
 
-### 集成测试
+*** 集成测试
 
-```janet
+#+begin_src janet
 # test/integration-test.janet
 (import ../src/main)
 
@@ -402,11 +402,11 @@ mdz src/*.janet
   # 测试完整流程
   (def result (main/run-workflow))
   (assert (= result :success)))
-```
+#+end_src
 
-## 6.11 最佳实践
+** 6.11 最佳实践
 
-### 项目组织原则
+*** 项目组织原则
 
 1. **单一职责** - 每个模块负责一个功能域
 2. **清晰的依赖** - 避免循环依赖
@@ -414,9 +414,9 @@ mdz src/*.janet
 4. **文档完整** - 为公共 API 写文档
 5. **测试覆盖** - 关键功能必须测试
 
-### 命名约定
+*** 命名约定
 
-```janet
+#+begin_src janet
 # 模块名：小写，短横线分隔
 my-module.janet
 
@@ -427,11 +427,11 @@ models/
 
 # 测试文件：test- 前缀
 test-mymodule.janet
-```
+#+end_src
 
-### 依赖管理
+*** 依赖管理
 
-```janet
+#+begin_src janet
 # 最小化依赖
 # 优先使用标准库
 # 考虑嵌入小型依赖
@@ -442,16 +442,16 @@ test-mymodule.janet
     "spork"           # 常用工具
     "sqlite3"         # 数据库
   ])
-```
+#+end_src
 
-## 6.12 实战：完整项目示例
+** 6.12 实战：完整项目示例
 
-### CLI 工具项目
+*** CLI 工具项目
 
-```
+#+begin_src
 janet-cli-tool/
 ├── project.janet
-├── README.md
+├── README.org
 ├── src/
 │   ├── main.janet
 │   ├── cli.janet
@@ -464,9 +464,9 @@ janet-cli-tool/
 │       └── config.janet
 └── test/
     └── test-commands.janet
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # project.janet
 (declare-project
   :name "mytool"
@@ -486,9 +486,9 @@ janet-cli-tool/
 
 # 直接执行
 (main ;(slice (dyn :args) 1))
-```
+#+end_src
 
-## 6.13 总结
+** 6.13 总结
 
 本章学习了：
 
@@ -501,7 +501,7 @@ janet-cli-tool/
 - ✓ 开发工作流
 - ✓ 测试和文档
 
-### 关键要点
+*** 关键要点
 
 1. **模块即文件** - 简单直接
 2. **JPM 很强大** - 标准化的构建工具
@@ -511,4 +511,4 @@ janet-cli-tool/
 
 ---
 
-← [上一章：宏与元编程](./05-macros-metaprogramming.md) | [返回目录](./README.md) | [下一章：并发编程](./07-concurrency.md) →
+← [[./05-macros-metaprogramming.org][上一章：宏与元编程]] | [[./README.org][返回目录]] | [[./07-concurrency.org][下一章：并发编程]] →

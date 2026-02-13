@@ -1,12 +1,12 @@
-# 第十章：系统编程
+* 第十章：系统编程
 
 Janet 作为系统级语言，提供了丰富的系统编程能力。本章介绍文件系统、进程管理、信号处理等系统级编程技术。
 
-## 10.1 文件系统操作
+** 10.1 文件系统操作
 
-### 文件读写
+*** 文件读写
 
-```janet
+#+begin_src janet
 # 读取整个文件
 (def content (slurp "file.txt"))
 
@@ -19,11 +19,11 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 # 二进制模式
 (def data (slurp "image.png" :binary))
 (spit "copy.png" data :binary)
-```
+#+end_src
 
-### 文件对象操作
+*** 文件对象操作
 
-```janet
+#+begin_src janet
 # 打开文件
 (def f (file/open "data.txt" :read))
 
@@ -45,11 +45,11 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 (defer (file/close f)
   (file/write f "Line 1\n")
   (file/write f "Line 2\n"))
-```
+#+end_src
 
-### 文件信息
+*** 文件信息
 
-```janet
+#+begin_src janet
 # 检查文件是否存在
 (os/stat "file.txt")  # 存在返回信息，不存在返回 nil
 
@@ -73,11 +73,11 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 (defn file? [path]
   (when-let [info (os/stat path)]
     (= (info :mode) :file)))
-```
+#+end_src
 
-### 目录操作
+*** 目录操作
 
-```janet
+#+begin_src janet
 # 列出目录内容
 (def files (os/dir "."))
 (pp files)
@@ -106,11 +106,11 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 
 # 获取当前目录
 (def cwd (os/cwd))
-```
+#+end_src
 
-### 路径操作
+*** 路径操作
 
-```janet
+#+begin_src janet
 # 连接路径
 (defn join-path [& parts]
   (string/join parts "/"))
@@ -142,13 +142,13 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 (dirname "/home/user/file.txt")   # => "/home/user"
 (basename "/home/user/file.txt")  # => "file.txt"
 (extname "/home/user/file.txt")   # => ".txt"
-```
+#+end_src
 
-## 10.2 进程管理
+** 10.2 进程管理
 
-### 执行外部命令
+*** 执行外部命令
 
-```janet
+#+begin_src janet
 # 执行命令并等待
 (os/execute ["ls" "-la"] :p)
 
@@ -158,11 +158,11 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 
 # 使用 sh 执行 shell 命令
 (os/shell "ls -la | grep .janet")
-```
+#+end_src
 
-### 进程控制
+*** 进程控制
 
-```janet
+#+begin_src janet
 # 创建子进程
 (def proc (os/spawn ["sleep" "10"] :p))
 
@@ -174,11 +174,11 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 
 # 检查进程状态
 (def status (os/proc-wait proc :no-hang))
-```
+#+end_src
 
-### 管道和重定向
+*** 管道和重定向
 
-```janet
+#+begin_src janet
 # 标准输入/输出重定向
 (def proc (os/spawn ["cat"]
                     :in :pipe
@@ -196,11 +196,11 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 
 (print "Output: " output)
 (os/proc-wait proc)
-```
+#+end_src
 
-### 实战：命令管道
+*** 实战：命令管道
 
-```janet
+#+begin_src janet
 (defn pipeline [& commands]
   # 实现类似 Unix pipeline 的功能
   (var prev-proc nil)
@@ -234,13 +234,13 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
   ["ls"]
   ["grep" "janet"]
   ["wc" "-l"])
-```
+#+end_src
 
-## 10.3 环境变量
+** 10.3 环境变量
 
-### 读取环境变量
+*** 读取环境变量
 
-```janet
+#+begin_src janet
 # 获取单个环境变量
 (os/getenv "HOME")
 (os/getenv "PATH")
@@ -255,11 +255,11 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 # 获取所有环境变量
 (def env (os/environ))
 (pp env)
-```
+#+end_src
 
-### 设置环境变量
+*** 设置环境变量
 
-```janet
+#+begin_src janet
 # 设置环境变量（仅对当前进程和子进程有效）
 (os/setenv "MY_VAR" "my-value")
 
@@ -268,13 +268,13 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 
 # 子进程继承环境变量
 (os/spawn ["sh" "-c" "echo $MY_VAR"] :p)
-```
+#+end_src
 
-## 10.4 信号处理
+** 10.4 信号处理
 
-### 基本信号处理
+*** 基本信号处理
 
-```janet
+#+begin_src janet
 # 注册信号处理器
 (defn signal-handler [sig]
   (print "Received signal: " sig)
@@ -293,11 +293,11 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 
 # 恢复默认行为
 (os/sigaction :int :default)
-```
+#+end_src
 
-### 优雅关闭
+*** 优雅关闭
 
-```janet
+#+begin_src janet
 (var running true)
 
 (defn shutdown-handler [sig]
@@ -313,24 +313,24 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
   (ev/sleep 1))
 
 (print "Cleanup complete, exiting.")
-```
+#+end_src
 
-## 10.5 定时器和调度
+** 10.5 定时器和调度
 
-### 睡眠和延迟
+*** 睡眠和延迟
 
-```janet
+#+begin_src janet
 # 睡眠（秒）
 (ev/sleep 1)      # 1 秒
 (ev/sleep 0.5)    # 0.5 秒
 
 # 使用 os/sleep（废弃，推荐使用 ev/sleep）
 # (os/sleep 1)
-```
+#+end_src
 
-### 定时任务
+*** 定时任务
 
-```janet
+#+begin_src janet
 # 简单的定时器
 (defn set-timeout [delay-sec f]
   (fiber/new
@@ -353,11 +353,11 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 # 使用
 (def interval (set-interval 1 (fn [] (print (os/time)))))
 (resume interval)
-```
+#+end_src
 
-### 事件调度器
+*** 事件调度器
 
-```janet
+#+begin_src janet
 (defn make-scheduler []
   (def tasks @[])
   
@@ -389,13 +389,13 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 ((sched :schedule) 2 (fn [] (print "Task 1")))
 ((sched :schedule) 1 (fn [] (print "Task 2")))
 ((sched :run))
-```
+#+end_src
 
-## 10.6 系统信息
+** 10.6 系统信息
 
-### 平台信息
+*** 平台信息
 
-```janet
+#+begin_src janet
 # 操作系统
 (os/which)  # => :linux, :macos, :windows, etc.
 
@@ -408,11 +408,11 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 (defn cpu-count []
   (def output (os/execute ["nproc"] :px {:out :pipe}))
   (scan-number (string/trim output)))
-```
+#+end_src
 
-### 时间和日期
+*** 时间和日期
 
-```janet
+#+begin_src janet
 # 当前 Unix 时间戳
 (os/time)
 
@@ -433,11 +433,11 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 
 (format-date (os/time))
 # => "2024-02-12 10:30:45"
-```
+#+end_src
 
-### 性能测量
+*** 性能测量
 
-```janet
+#+begin_src janet
 (defn benchmark [f]
   (def start (os/clock))
   (f)
@@ -453,24 +453,24 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
        (set sum (+ sum i))))))
 
 (printf "Elapsed: %.6f seconds" (/ elapsed 1e9))
-```
+#+end_src
 
-## 10.7 日志系统
+** 10.7 日志系统
 
-### 简单日志
+*** 简单日志
 
-```janet
+#+begin_src janet
 (defn log [level message]
   (def timestamp (format-date (os/time)))
   (printf "[%s] %s: %s" timestamp level message))
 
 (log "INFO" "Application started")
 (log "ERROR" "Something went wrong")
-```
+#+end_src
 
-### 完整日志系统
+*** 完整日志系统
 
-```janet
+#+begin_src janet
 (defn make-logger [path]
   (def file (file/open path :append))
   
@@ -492,13 +492,13 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 ((logger :info) "Application started")
 ((logger :error) "An error occurred")
 ((logger :close))
-```
+#+end_src
 
-## 10.8 实战：系统监控工具
+** 10.8 实战：系统监控工具
 
-### CPU 使用率监控
+*** CPU 使用率监控
 
-```janet
+#+begin_src janet
 (defn get-cpu-usage []
   # 读取 /proc/stat (Linux)
   (when (linux?)
@@ -531,11 +531,11 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 
 # 运行
 # (monitor-cpu 1)
-```
+#+end_src
 
-### 内存监控
+*** 内存监控
 
-```janet
+#+begin_src janet
 (defn get-memory-info []
   # 读取 /proc/meminfo (Linux)
   (when (linux?)
@@ -565,11 +565,11 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 
 # 运行
 # (monitor-memory 2)
-```
+#+end_src
 
-### 磁盘监控
+*** 磁盘监控
 
-```janet
+#+begin_src janet
 (defn get-disk-usage [path]
   # 使用 df 命令
   (def output (os/execute ["df" "-k" path] :px {:out :pipe}))
@@ -584,13 +584,13 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
        :usage (string (get parts 4))})))
 
 (pp (get-disk-usage "/"))
-```
+#+end_src
 
-## 10.9 守护进程
+** 10.9 守护进程
 
-### 创建守护进程
+*** 创建守护进程
 
-```janet
+#+begin_src janet
 (defn daemonize []
   # Fork 第一次
   (def pid (os/fork))
@@ -620,11 +620,11 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 # (while true
 #   # 守护进程工作
 #   (ev/sleep 1))
-```
+#+end_src
 
-### PID 文件
+*** PID 文件
 
-```janet
+#+begin_src janet
 (defn write-pidfile [path]
   (def pid (os/getpid))
   (spit path (string pid "\n")))
@@ -642,13 +642,13 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 (defer (remove-pidfile "/var/run/myapp.pid")
   # 应用逻辑
   )
-```
+#+end_src
 
-## 10.10 跨平台编程
+** 10.10 跨平台编程
 
-### 平台检测
+*** 平台检测
 
-```janet
+#+begin_src janet
 (defn platform-specific [& {:linux nil :macos nil :windows nil}]
   (case (os/which)
     :linux (linux)
@@ -661,51 +661,51 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
   :linux (fn [] (print "Running on Linux"))
   :macos (fn [] (print "Running on macOS"))
   :windows (fn [] (print "Running on Windows")))
-```
+#+end_src
 
-### 路径分隔符
+*** 路径分隔符
 
-```janet
+#+begin_src janet
 (def path-separator
   (if (= (os/which) :windows) "\\" "/"))
 
 (defn join-path [& parts]
   (string/join parts path-separator))
-```
+#+end_src
 
-## 10.11 实践练习
+** 10.11 实践练习
 
-### 练习 1：文件监控
+*** 练习 1：文件监控
 
 实现一个文件变化监控器：
 
-```janet
+#+begin_src janet
 (defn watch-file [path callback]
   # TODO: 监控文件变化并调用回调
   )
-```
+#+end_src
 
-### 练习 2：进程管理器
+*** 练习 2：进程管理器
 
 实现一个简单的进程管理器，可以启动、停止和重启进程：
 
-```janet
+#+begin_src janet
 (defn make-process-manager []
   # TODO
   )
-```
+#+end_src
 
-### 练习 3：系统资源监控器
+*** 练习 3：系统资源监控器
 
 创建一个全面的系统资源监控工具：
 
-```janet
+#+begin_src janet
 (defn system-monitor []
   # TODO: 监控 CPU、内存、磁盘、网络
   )
-```
+#+end_src
 
-## 10.12 总结
+** 10.12 总结
 
 本章学习了：
 
@@ -719,7 +719,7 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 - ✓ 守护进程
 - ✓ 跨平台编程
 
-### 关键要点
+*** 关键要点
 
 1. **丰富的系统 API** - 覆盖大部分系统编程需求
 2. **跨平台支持** - 统一的接口
@@ -729,4 +729,4 @@ Janet 作为系统级语言，提供了丰富的系统编程能力。本章介�
 
 ---
 
-← [上一章：网络编程](./09-networking.md) | [返回目录](./README.md) | [下一章：PEG 解析器](./11-peg-parsing.md) →
+← [[./09-networking.org][上一章：网络编程]] | [[./README.org][返回目录]] | [[./11-peg-parsing.org][下一章：PEG 解析器]] →

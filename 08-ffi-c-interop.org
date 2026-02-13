@@ -1,21 +1,21 @@
-# 第八章：FFI 与 C 互操作
+* 第八章：FFI 与 C 互操作
 
 FFI (Foreign Function Interface) 是 Janet 进行系统级编程的核心能力。通过 FFI，你可以直接调用 C 库，无需编写绑定代码。
 
-## 8.1 FFI 基础
+** 8.1 FFI 基础
 
-### 为什么需要 FFI？
+*** 为什么需要 FFI？
 
-```janet
+#+begin_src janet
 # 场景1：调用系统 API
 # 场景2：使用现有 C 库
 # 场景3：性能关键代码用 C 实现
 # 场景4：访问硬件或底层资源
-```
+#+end_src
 
-### FFI 可用性
+*** FFI 可用性
 
-```janet
+#+begin_src janet
 # 检查 FFI 是否可用
 (if (dyn :ffi/native)
   (print "FFI is available")
@@ -25,13 +25,13 @@ FFI (Foreign Function Interface) 是 Janet 进行系统级编程的核心能力�
 # - x86-64 架构
 # - 非 Windows 系统（或特定配置的 Windows）
 # - Janet 1.23.0+
-```
+#+end_src
 
-## 8.2 基本 FFI 操作
+** 8.2 基本 FFI 操作
 
-### 加载动态库
+*** 加载动态库
 
-```janet
+#+begin_src janet
 # 加载系统库
 (ffi/native "/usr/lib/x86_64-linux-gnu/libm.so.6")
 
@@ -43,11 +43,11 @@ FFI (Foreign Function Interface) 是 Janet 进行系统级编程的核心能力�
 
 # 查找符号
 (def sin-ptr (ffi/lookup "sin"))
-```
+#+end_src
 
-### 定义 C 函数签名
+*** 定义 C 函数签名
 
-```janet
+#+begin_src janet
 # 基本类型映射
 # C 类型          Janet FFI 类型
 # void            :void
@@ -68,11 +68,11 @@ FFI (Foreign Function Interface) 是 Janet 进行系统级编程的核心能力�
 
 # 定义函数签名
 (def sin-sig (ffi/signature :double [:double]))
-```
+#+end_src
 
-### 调用 C 函数
+*** 调用 C 函数
 
-```janet
+#+begin_src janet
 # 完整示例：调用 libm 的 sin 函数
 (ffi/native "/usr/lib/x86_64-linux-gnu/libm.so.6")
 
@@ -85,11 +85,11 @@ FFI (Foreign Function Interface) 是 Janet 进行系统级编程的核心能力�
 # 调用
 (sin-c 0)      # => 0
 (sin-c 1.5708) # => ~1.0 (π/2)
-```
+#+end_src
 
-### ffi/defbind 简化版
+*** ffi/defbind 简化版
 
-```janet
+#+begin_src janet
 # 使用 defbind 宏简化定义
 (ffi/native "/usr/lib/x86_64-linux-gnu/libm.so.6")
 
@@ -101,13 +101,13 @@ FFI (Foreign Function Interface) 是 Janet 进行系统级编程的核心能力�
 (sin 0)      # => 0
 (cos 0)      # => 1
 (sqrt 16)    # => 4
-```
+#+end_src
 
-## 8.3 结构体与指针
+** 8.3 结构体与指针
 
-### 定义 C 结构体
+*** 定义 C 结构体
 
-```janet
+#+begin_src janet
 # C 代码：
 # struct Point {
 #     double x;
@@ -130,11 +130,11 @@ FFI (Foreign Function Interface) 是 Janet 进行系统级编程的核心能力�
 
 # 读取
 (ffi/struct-get p :x)  # => 3.0
-```
+#+end_src
 
-### 指针操作
+*** 指针操作
 
-```janet
+#+begin_src janet
 # 获取结构体指针
 (def p-ptr (ffi/pointer p))
 
@@ -150,11 +150,11 @@ FFI (Foreign Function Interface) 是 Janet 进行系统级编程的核心能力�
 # 读写指针指向的内存
 (ffi/write-double p-ptr 0 3.14)
 (ffi/read-double p-ptr 0)  # => 3.14
-```
+#+end_src
 
-### 数组与内存
+*** 数组与内存
 
-```janet
+#+begin_src janet
 # 分配内存
 (def buffer (ffi/malloc 1024))  # 分配 1KB
 
@@ -175,13 +175,13 @@ FFI (Foreign Function Interface) 是 Janet 进行系统级编程的核心能力�
   (def buf (ffi/malloc size))
   (defer (ffi/free buf)
     (f buf)))
-```
+#+end_src
 
-## 8.4 实战：调用系统 API
+** 8.4 实战：调用系统 API
 
-### 示例 1：调用 POSIX API
+*** 示例 1：调用 POSIX API
 
-```janet
+#+begin_src janet
 # 调用 getpid() 获取进程 ID
 (ffi/native)  # 加载当前进程符号
 
@@ -192,11 +192,11 @@ FFI (Foreign Function Interface) 是 Janet 进行系统级编程的核心能力�
 (print "PID: " (getpid))
 (print "UID: " (getuid))
 (print "GID: " (getgid))
-```
+#+end_src
 
-### 示例 2：文件操作
+*** 示例 2：文件操作
 
-```janet
+#+begin_src janet
 # 使用 POSIX open/read/write/close
 (ffi/native)
 
@@ -224,11 +224,11 @@ FFI (Foreign Function Interface) 是 Janet 进行系统级编程的核心能力�
       (if (< n 0)
         (error "Read failed")
         (string/from-bytes (ffi/read-bytes buf 0 n))))))
-```
+#+end_src
 
-### 示例 3：网络编程
+*** 示例 3：网络编程
 
-```janet
+#+begin_src janet
 # Socket API
 (ffi/native)
 
@@ -244,13 +244,13 @@ FFI (Foreign Function Interface) 是 Janet 进行系统级编程的核心能力�
 
 # 创建 TCP socket
 (def sock (c-socket AF_INET SOCK_STREAM 0))
-```
+#+end_src
 
-## 8.5 与 C 代码集成
+** 8.5 与 C 代码集成
 
-### 方式 1：编写 Janet C 模块
+*** 方式 1：编写 Janet C 模块
 
-```c
+#+begin_src c
 /* mymodule.c */
 #include <janet.h>
 
@@ -269,29 +269,29 @@ static const JanetReg cfuns[] = {
 JANET_MODULE_ENTRY(JanetTable *env) {
     janet_cfuns(env, "mymodule", cfuns);
 }
-```
+#+end_src
 
 编译模块：
 
-```bash
+#+begin_src bash
 # 编译为共享库
 gcc -shared -fPIC -I/path/to/janet \
     -o mymodule.so mymodule.c
 
 # 或使用 JPM
 jpm build
-```
+#+end_src
 
 在 Janet 中使用：
 
-```janet
+#+begin_src janet
 (import ./mymodule)
 (mymodule/add 1 2)  # => 3
-```
+#+end_src
 
-### 方式 2：嵌入 Janet 到 C 程序
+*** 方式 2：嵌入 Janet 到 C 程序
 
-```c
+#+begin_src c
 /* embed.c */
 #include <janet.h>
 #include <stdio.h>
@@ -324,21 +324,21 @@ int main() {
     janet_deinit();
     return 0;
 }
-```
+#+end_src
 
 编译：
 
-```bash
+#+begin_src bash
 gcc embed.c -I/path/to/janet -ljanet -o embed
 ./embed
 # 输出: Result: 6.000000
-```
+#+end_src
 
-### 方式 3：以 raylib 为例（与 C/C++ 项目互动）
+*** 方式 3：以 raylib 为例（与 C/C++ 项目互动）
 
 raylib 是 C 写的图形库，也常在 C++ 项目中使用。实践里建议先写一层很薄的 C 包装，再给 Janet 调用，这样可以同时规避 C++ 名字改编问题并简化类型映射。
 
-```c
+#+begin_src c
 /* raylib_bridge.c */
 #include "raylib.h"
 
@@ -361,18 +361,18 @@ void rl_close_window(void) { CloseWindow(); }
 #ifdef __cplusplus
 }
 #endif
-```
+#+end_src
 
-```bash
+#+begin_src bash
 # Linux 示例（C）
 # 如果 raylib 不在系统默认路径，追加 -I/path/to/raylib/include -L/path/to/raylib/lib
 gcc -shared -fPIC raylib_bridge.c -lraylib -o libraylib_bridge.so
 
 # Linux 示例（C++ 项目中编译同一桥接文件）
 g++ -shared -fPIC raylib_bridge.c -lraylib -o libraylib_bridge.so
-```
+#+end_src
 
-```janet
+#+begin_src janet
 (ffi/native "./libraylib_bridge.so")
 
 (ffi/defbind rl_init_window :void [w :int h :int title :string])
@@ -390,7 +390,7 @@ g++ -shared -fPIC raylib_bridge.c -lraylib -o libraylib_bridge.so
   (rl_draw_text "Hello from Janet FFI" 190 200 24 245 245 245 255)
   (rl_end_drawing))
 (rl_close_window)
-```
+#+end_src
 
 这个模式同样适用于 SDL、OpenGL 包装层或你自己的 C++ 引擎导出接口（`extern "C"`）。
 
@@ -402,16 +402,16 @@ g++ -shared -fPIC raylib_bridge.c -lraylib -o libraylib_bridge.so
 4. **输入与主循环控制**：键鼠状态、FPS 控制、窗口状态。
 5. **C++ 对象桥接**：用“不透明指针 + C 包装函数”访问 C++ 类实例。
 
-#### A) 常量/输入/帧控制
+**** A) 常量/输入/帧控制
 
-```c
+#+begin_src c
 /* 示例里用函数导出常量；生产环境也可在 Janet 侧维护常量映射 */
 int rl_key_space(void) { return KEY_SPACE; }
 int rl_is_key_down(int key) { return IsKeyDown(key) ? 1 : 0; }
 void rl_set_target_fps(int fps) { SetTargetFPS(fps); }
-```
+#+end_src
 
-```janet
+#+begin_src janet
 (ffi/defbind rl_key_space :int [])
 (ffi/defbind rl_is_key_down :int [key :int])
 (ffi/defbind rl_set_target_fps :void [fps :int])
@@ -420,24 +420,24 @@ void rl_set_target_fps(int fps) { SetTargetFPS(fps); }
 (rl_set_target_fps 60)
 (when (key-down? (rl_key_space))
   (print "space pressed"))
-```
+#+end_src
 
-#### B) 结构体互传（Vector2）
+**** B) 结构体互传（Vector2）
 
-```c
+#+begin_src c
 void rl_draw_circle_v(float x, float y, float radius, int r, int g, int b, int a) {
     DrawCircleV((Vector2) {x, y}, radius, (Color) {r, g, b, a});
 }
-```
+#+end_src
 
-```janet
+#+begin_src janet
 (ffi/defbind rl_draw_circle_v :void [x :float y :float radius :float r :int g :int b :int a :int])
 (rl_draw_circle_v 120.0 100.0 24.0 255 180 80 255)
-```
+#+end_src
 
-#### C) 资源对象生命周期（Texture2D）
+**** C) 资源对象生命周期（Texture2D）
 
-```c
+#+begin_src c
 #include <stdlib.h>
 
 typedef struct RLTextureHandle {
@@ -455,9 +455,9 @@ RLTextureHandle *rl_load_texture(const char *path) {
 
 void rl_draw_texture(RLTextureHandle *h, int x, int y) { if (h) DrawTexture(h->tex, x, y, WHITE); }
 void rl_unload_texture(RLTextureHandle *h) { if (h) { UnloadTexture(h->tex); free(h); } }
-```
+#+end_src
 
-```janet
+#+begin_src janet
 (ffi/defbind rl_load_texture :ptr [path :string])
 (ffi/defbind rl_draw_texture :void [h :ptr x :int y :int])
 (ffi/defbind rl_unload_texture :void [h :ptr])
@@ -466,11 +466,11 @@ void rl_unload_texture(RLTextureHandle *h) { if (h) { UnloadTexture(h->tex); fre
 (when tex
   (defer (rl_unload_texture tex)
     (rl_draw_texture tex 32 32)))
-```
+#+end_src
 
-#### D) C++ 互操作（不透明句柄）
+**** D) C++ 互操作（不透明句柄）
 
-```cpp
+#+begin_src cpp
 // engine_bridge.cpp
 class Engine {
 public:
@@ -482,9 +482,9 @@ void *engine_new() { return new Engine(); }
 void engine_tick(void *p, double dt) { if (!p) return; static_cast<Engine *>(p)->tick(dt); }
 void engine_delete(void *p) { if (!p) return; delete static_cast<Engine *>(p); }
 }
-```
+#+end_src
 
-```janet
+#+begin_src janet
 (ffi/native "./libengine_bridge.so")
 (ffi/defbind engine_new :ptr [])
 (ffi/defbind engine_tick :void [p :ptr dt :double])
@@ -493,15 +493,15 @@ void engine_delete(void *p) { if (!p) return; delete static_cast<Engine *>(p); }
 (def eng (engine_new))
 (defer (engine_delete eng)
   (engine_tick eng 0.016))
-```
+#+end_src
 
 这四组模式（输入控制、结构体互传、资源生命周期、C++ 对象句柄）加上前面的窗口渲染，就是 Janet 在图形/游戏场景中常见的一整套 interop 骨架。
 
-## 8.6 C API 核心函数
+** 8.6 C API 核心函数
 
-### 类型转换
+*** 类型转换
 
-```c
+#+begin_src c
 // Janet -> C
 double janet_getnumber(const Janet *argv, int32_t n);
 int32_t janet_getinteger(const Janet *argv, int32_t n);
@@ -516,11 +516,11 @@ Janet janet_wrap_pointer(void *ptr);
 Janet janet_wrap_nil(void);
 Janet janet_wrap_true(void);
 Janet janet_wrap_false(void);
-```
+#+end_src
 
-### 集合操作
+*** 集合操作
 
-```c
+#+begin_src c
 // 数组
 JanetArray *janet_array(int32_t capacity);
 void janet_array_push(JanetArray *array, Janet x);
@@ -534,11 +534,11 @@ void janet_table_put(JanetTable *table, Janet key, Janet value);
 // 结构体
 const JanetKV *janet_struct_begin(int32_t count);
 const JanetKV *janet_struct_end(JanetKV *st);
-```
+#+end_src
 
-### 错误处理
+*** 错误处理
 
-```c
+#+begin_src c
 // 抛出错误
 void janet_panic(const char *message);
 void janet_panicf(const char *format, ...);
@@ -546,13 +546,13 @@ void janet_panicf(const char *format, ...);
 // 参数检查
 void janet_fixarity(int32_t argc, int32_t expected);
 void janet_arity(int32_t argc, int32_t min, int32_t max);
-```
+#+end_src
 
-## 8.7 性能考虑
+** 8.7 性能考虑
 
-### FFI 性能
+*** FFI 性能
 
-```janet
+#+begin_src janet
 # FFI 调用有开销（比原生 C 慢）
 # 适合：
 # - 调用频率低但功能重要的函数
@@ -571,11 +571,11 @@ void janet_arity(int32_t argc, int32_t min, int32_t max);
 (for i 0 1000000
   (put data i i))
 # 然后用 C 函数批量处理
-```
+#+end_src
 
-### 优化技巧
+*** 优化技巧
 
-```janet
+#+begin_src janet
 # 1. 批量传递数据
 (defn batch-sin [values]
   # 在 C 中循环处理整个数组
@@ -587,57 +587,57 @@ void janet_arity(int32_t argc, int32_t min, int32_t max);
 
 # 3. 使用 Janet 内置函数优先
 (math/sin x)  # 优于 FFI 调用
-```
+#+end_src
 
-## 8.8 与其他 Lisp 的 FFI 对比
+** 8.8 与其他 Lisp 的 FFI 对比
 
-### Common Lisp CFFI
+*** Common Lisp CFFI
 
-```lisp
+#+begin_src lisp
 ; Common Lisp
 (cffi:defcfun "sin" :double
   (x :double))
 
 (sin 1.0)
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet
 (ffi/defbind sin :double [x :double])
 (sin 1.0)
-```
+#+end_src
 
 相似度很高！
 
-### Scheme FFI
+*** Scheme FFI
 
-```scheme
+#+begin_src scheme
 ; Chicken Scheme
 (foreign-declare "#include <math.h>")
 (define sin (foreign-lambda double "sin" double))
-```
+#+end_src
 
-```janet
+#+begin_src janet
 # Janet
 (ffi/native)
 (ffi/defbind sin :double [x :double])
-```
+#+end_src
 
-### Clojure JNI/JNA
+*** Clojure JNI/JNA
 
-```clojure
+#+begin_src clojure
 ; Clojure (使用 JNA)
 (require '[net.n01se.clojure-jna :as jna])
 (def sin (jna/to-fn Double [Double] "sin"))
-```
+#+end_src
 
 Janet 的 FFI 更直接，无需 JVM 层。
 
-## 8.9 安全性注意事项
+** 8.9 安全性注意事项
 
-### 内存安全
+*** 内存安全
 
-```janet
+#+begin_src janet
 # 危险操作示例
 (def ptr (ffi/malloc 100))
 # 忘记 free -> 内存泄漏
@@ -656,11 +656,11 @@ Janet 的 FFI 更直接，无需 JVM 层。
   (fn [buf]
     # 使用 buf
     ))  # 自动清理
-```
+#+end_src
 
-### 类型安全
+*** 类型安全
 
-```janet
+#+begin_src janet
 # FFI 不检查类型！
 (ffi/defbind dangerous :void [p :ptr])
 
@@ -671,13 +671,13 @@ Janet 的 FFI 更直接，无需 JVM 层。
 (defn safe-dangerous [p]
   (assert (= (type p) :pointer) "Expected pointer")
   (dangerous p))
-```
+#+end_src
 
-## 8.10 实战项目：系统信息工具
+** 8.10 实战项目：系统信息工具
 
 创建一个获取系统信息的工具：
 
-```janet
+#+begin_src janet
 # sysinfo.janet
 (ffi/native)
 
@@ -706,44 +706,44 @@ Janet 的 FFI 更直接，无需 JVM 层。
 
 # 使用
 (pp (get-system-info))
-```
+#+end_src
 
-## 8.11 练习
+** 8.11 练习
 
-### 练习 1：包装 C 库
+*** 练习 1：包装 C 库
 
 包装一个简单的 C 库（如 zlib）：
 
-```janet
+#+begin_src janet
 (defmodule zlib
   # TODO: 绑定 compress 和 decompress 函数
   )
-```
+#+end_src
 
-### 练习 2：系统调用
+*** 练习 2：系统调用
 
 实现文件监控（使用 inotify 或类似 API）：
 
-```janet
+#+begin_src janet
 (defn watch-file [path callback]
   # TODO: 使用 FFI 实现文件监控
   )
-```
+#+end_src
 
-### 练习 3：性能对比
+*** 练习 3：性能对比
 
 对比 FFI sin 和 Janet math/sin 的性能：
 
-```janet
+#+begin_src janet
 (defn benchmark [f n]
   # TODO: 测试调用 f n 次的时间
   )
 
 (benchmark math/sin 100000)
 (benchmark sin-c 100000)
-```
+#+end_src
 
-## 8.12 总结
+** 8.12 总结
 
 本章学习了：
 
@@ -754,7 +754,7 @@ Janet 的 FFI 更直接，无需 JVM 层。
 - ✓ 嵌入 Janet 到 C 程序
 - ✓ 性能和安全考虑
 
-### 关键要点
+*** 关键要点
 
 1. **直接调用 C** - 无需编写绑定代码
 2. **类型系统简单** - 基本 C 类型映射清晰
@@ -764,4 +764,4 @@ Janet 的 FFI 更直接，无需 JVM 层。
 
 ---
 
-← [上一章：并发编程](./07-concurrency.md) | [返回目录](./README.md) | [下一章：网络编程](./09-networking.md) →
+← [[./07-concurrency.org][上一章：并发编程]] | [[./README.org][返回目录]] | [[./09-networking.org][下一章：网络编程]] →
