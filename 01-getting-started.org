@@ -217,7 +217,7 @@ jpm build
 
 | 功能 | Common Lisp | Janet |
 |------|-------------|-------|
-| 定义变量 | `(defparameter x 10)` | `(def x 10)` |
+| 定义变量 | `(defparameter x 10)` | ~(def x 10)~ |
 | 定义函数 | `(defun f (x) ...)` | `(defn f [x] ...)` |
 | Lambda | `(lambda (x) ...)` | `(fn [x] ...)` |
 | Let 绑定 | `(let ((x 1)) ...)` | `(let [x 1] ...)` |
@@ -230,7 +230,7 @@ jpm build
 
 | 功能 | Scheme | Janet |
 |------|--------|-------|
-| 定义 | `(define x 10)` | `(def x 10)` |
+| 定义 | `(define x 10)` | ~(def x 10)~ |
 | 函数 | `(define (f x) ...)` | `(defn f [x] ...)` |
 | Lambda | `(lambda (x) ...)` | `(fn [x] ...)` |
 | Let | `(let ((x 1)) ...)` | `(let [x 1] ...)` |
@@ -241,7 +241,7 @@ jpm build
 
 | 功能 | Clojure | Janet |
 |------|---------|-------|
-| 定义 | `(def x 10)` | `(def x 10)` ✓ |
+| 定义 | ~(def x 10)~ | ~(def x 10)~ ✓ |
 | 函数 | `(defn f [x] ...)` | `(defn f [x] ...)` ✓ |
 | Lambda | `(fn [x] ...)` | `(fn [x] ...)` ✓ |
 | Let | `(let [x 1] ...)` | `(let [x 1] ...)` ✓ |
@@ -469,7 +469,7 @@ jpm clean
 
 *** 从 Common Lisp 过来
 
-- **包系统**: Janet 没有 CL 那样复杂的包系统，模块更简单
+- *包系统*: Janet 没有 CL 那样复杂的包系统，模块更简单
 - **CLOS**: Janet 没有对象系统，使用函数式方法
 - **宏**: Janet 的宏类似但更简单，默认是卫生宏
 - **多值返回**: 使用元组代替
