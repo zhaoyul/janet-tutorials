@@ -1,6 +1,6 @@
 * 第七章：并发编程
 
-Janet 的并发模型建立在 **纤程（Fibers）** 之上，这是一种轻量级协程机制。与其他 Lisp 方言相比，Janet 的并发更接近 Lua 的协程或 Go 的 goroutines，而不是传统的线程模型。
+Janet 的并发模型建立在 *纤程（Fibers）* 之上，这是一种轻量级协程机制。与其他 Lisp 方言相比，Janet 的并发更接近 Lua 的协程或 Go 的 goroutines，而不是传统的线程模型。
 
 ** 7.1 Fibers 基础
 
@@ -42,7 +42,7 @@ Fiber 是 Janet 中的协程（coroutine），是一种可以暂停和恢复执�
 
 *** 与 Scheme call/cc 的对比
 
-熟悉 Scheme 的开发者会注意到 fibers 提供了类似 `call/cc` 的能力，但更加受限和实用：
+熟悉 Scheme 的开发者会注意到 fibers 提供了类似 ~call/cc~ 的能力，但更加受限和实用：
 
 #+begin_src janet
 # Scheme call/cc 风格（概念性）
@@ -59,11 +59,11 @@ Fiber 是 Janet 中的协程（coroutine），是一种可以暂停和恢复执�
 (resume fiber 20)        # 传入 20，返回 30
 #+end_src
 
-**主要区别：**
+*主要区别：*
 
-1. **控制流更简单** - 没有 call/cc 的逃逸延续（escape continuations）
-2. **单向传递** - yield 返回到调用者，不能像 call/cc 那样随意跳转
-3. **更易理解** - 明确的暂停/恢复语义
+1. *控制流更简单* - 没有 call/cc 的逃逸延续（escape continuations）
+2. *单向传递* - yield 返回到调用者，不能像 call/cc 那样随意跳转
+3. *更易理解* - 明确的暂停/恢复语义
 
 ** 7.2 Fiber 的通信模式
 
@@ -128,11 +128,11 @@ Fiber 是 Janet 中的协程（coroutine），是一种可以暂停和恢复执�
 (resume w {:task "data"})
 #+end_src
 
-**主要区别：**
+*主要区别：*
 
-1. **调度** - Go 有运行时调度器，Janet fibers 需要手动调度
-2. **并行性** - Go goroutines 可以真正并行，Janet fibers 是协作式的
-3. **通信** - Go 用 channels，Janet 用 yield/resume 或事件循环
+1. *调度* - Go 有运行时调度器，Janet fibers 需要手动调度
+2. *并行性* - Go goroutines 可以真正并行，Janet fibers 是协作式的
+3. *通信* - Go 用 channels，Janet 用 yield/resume 或事件循环
 
 ** 7.3 错误处理
 
@@ -170,7 +170,7 @@ Fiber 是 Janet 中的协程（coroutine），是一种可以暂停和恢复执�
 
 *** ev 模块简介
 
-Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的事件循环。
+Janet 的 ~ev~ 模块提供了事件驱动的异步 I/O，类似于 Node.js 的事件循环。
 
 #+begin_src janet
 # 创建一个异步任务
@@ -229,7 +229,7 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
 
 ** 7.5 Channel 模式
 
-虽然 Janet 没有内置 Go 风格的 channels，但可以通过 `ev/chan` 实现类似的功能：
+虽然 Janet 没有内置 Go 风格的 channels，但可以通过 ~ev/chan~ 实现类似的功能：
 
 #+begin_src janet
 # 创建一个 channel
@@ -654,11 +654,11 @@ Janet 的 `ev` 模块提供了事件驱动的异步 I/O，类似于 Node.js 的�
 
 *** 关键要点
 
-1. **Fibers 是协作式的** - 不会被抢占，需要显式 yield
-2. **ev 模块提供事件循环** - 类似 Node.js 的异步模型
-3. **Channels 用于通信** - 比直接 yield/resume 更结构化
-4. **避免阻塞操作** - 在异步上下文中使用 ev/sleep 而非 os/sleep
-5. **轻量且高效** - 可以轻松创建数千个 fibers
+1. *Fibers 是协作式的* - 不会被抢占，需要显式 yield
+2. *ev 模块提供事件循环* - 类似 Node.js 的异步模型
+3. *Channels 用于通信* - 比直接 yield/resume 更结构化
+4. *避免阻塞操作* - 在异步上下文中使用 ev/sleep 而非 os/sleep
+5. *轻量且高效* - 可以轻松创建数千个 fibers
 
 ---
 

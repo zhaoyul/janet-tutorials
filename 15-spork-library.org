@@ -6,9 +6,9 @@ Spork 是 Janet 官方的扩展标准库（contrib library），包含大量实�
 
 Spork 的定位是“通用但不进入核心库的功能集合”。它既提供纯 Janet 模块，也包含少量原生扩展（C 实现），用于性能敏感或系统相关的能力。使用 Spork 的好处是：
 
-- **减少重复造轮子**：常见能力（JSON、HTTP、CLI、模板等）开箱即用
-- **模块化组合**：按需导入，保持依赖清晰
-- **官方维护**：与 Janet 生态保持一致的风格和升级节奏
+- *减少重复造轮子*：常见能力（JSON、HTTP、CLI、模板等）开箱即用
+- *模块化组合*：按需导入，保持依赖清晰
+- *官方维护*：与 Janet 生态保持一致的风格和升级节奏
 
 ** 15.2 安装与版本选择
 
@@ -27,11 +27,11 @@ cd spork
 [sudo] jpm install spork
 #+end_src
 
-安装完成后，模块会被放入 `JANET_PATH`，可执行脚本会放入 `JANET_PATH/bin`。
+安装完成后，模块会被放入 ~JANET_PATH~，可执行脚本会放入 ~JANET_PATH/bin~。
 
 ** 15.3 导入方式与模块组织
 
-Spork 以 `spork/` 作为模块前缀，推荐按需导入：
+Spork 以 ~spork/~ 作为模块前缀，推荐按需导入：
 
 #+begin_src janet
 (import spork/json)
@@ -51,58 +51,58 @@ Spork 以 `spork/` 作为模块前缀，推荐按需导入：
 Spork 模块数量较多，按用途分类可以快速定位：
 
 *** CLI 与开发工具
-- `argparse`：命令行参数解析
-- `pm` / `pm-config`：Janet 包管理工具相关模块
-- `netrepl`：网络 REPL 服务器/客户端
-- `test`：测试辅助工具
-- `version`：版本信息工具
-- `msg`：消息格式化与日志辅助
+- ~argparse~：命令行参数解析
+- ~pm~ / ~pm-config~：Janet 包管理工具相关模块
+- ~netrepl~：网络 REPL 服务器/客户端
+- ~test~：测试辅助工具
+- ~version~：版本信息工具
+- ~msg~：消息格式化与日志辅助
 
 *** 构建与 FFI
-- `build-rules`：构建规则抽象
-- `cc` / `declare-cc`：C 编译与配置辅助
-- `cjanet`：生成 Janet/C 互操作骨架
+- ~build-rules~：构建规则抽象
+- ~cc~ / ~declare-cc~：C 编译与配置辅助
+- ~cjanet~：生成 Janet/C 互操作骨架
 
 *** 网络与服务
-- `http` / `httpf`：HTTP 协议、客户端/服务器
-- `rpc`：简单 RPC 支持
-- `services`：服务管理与生命周期辅助
-- `channel`：事件/通道通信
+- ~http~ / ~httpf~：HTTP 协议、客户端/服务器
+- ~rpc~：简单 RPC 支持
+- ~services~：服务管理与生命周期辅助
+- ~channel~：事件/通道通信
 
 *** 数据与序列化
-- `json`：JSON 编解码（原生模块）
-- `base64`：Base64 编解码（原生模块）
-- `crc`：CRC 校验（原生模块）
-- `zip`：Zip 压缩（原生模块）
-- `utf8`：UTF-8 工具（原生模块）
-- `tarray`：Typed Array（原生模块）
-- `data` / `schema`：数据结构与校验
+- ~json~：JSON 编解码（原生模块）
+- ~base64~：Base64 编解码（原生模块）
+- ~crc~：CRC 校验（原生模块）
+- ~zip~：Zip 压缩（原生模块）
+- ~utf8~：UTF-8 工具（原生模块）
+- ~tarray~：Typed Array（原生模块）
+- ~data~ / ~schema~：数据结构与校验
 
 *** 文本与模板
-- `regex`：正则表达式辅助
-- `temple`：模板引擎
-- `htmlgen`：HTML 生成工具
-- `fmt`：格式化输出
-- `infix`：中缀语法辅助
+- ~regex~：正则表达式辅助
+- ~temple~：模板引擎
+- ~htmlgen~：HTML 生成工具
+- ~fmt~：格式化输出
+- ~infix~：中缀语法辅助
 
 *** 系统与自动化
-- `sh` / `sh-dsl`：Shell 命令调用与 DSL
-- `path`：路径操作
-- `stream`：流式处理工具
-- `getline`：交互式输入
-- `tasker`：任务调度器
-- `ev-utils`：事件循环辅助
+- ~sh~ / ~sh-dsl~：Shell 命令调用与 DSL
+- ~path~：路径操作
+- ~stream~：流式处理工具
+- ~getline~：交互式输入
+- ~tasker~：任务调度器
+- ~ev-utils~：事件循环辅助
 
 *** 时间、随机与数学
-- `cron`：Cron 解析与调度
-- `randgen`：随机数/种子工具
-- `math`：数学辅助函数
-- `generators`：生成器与序列工具
-- `misc`：通用小工具
+- ~cron~：Cron 解析与调度
+- ~randgen~：随机数/种子工具
+- ~math~：数学辅助函数
+- ~generators~：生成器与序列工具
+- ~misc~：通用小工具
 
 *** 安全相关
-- `pgp`：PGP 相关功能
-- `rawterm`：终端模式控制（原生模块）
+- ~pgp~：PGP 相关功能
+- ~rawterm~：终端模式控制（原生模块）
 
 #+begin_quote
 模块列表会随着 Spork 版本更新而扩展，推荐结合官方文档查看最新 API。
@@ -178,15 +178,15 @@ Spork 模块数量较多，按用途分类可以快速定位：
 
 Spork 附带了几个实用的命令行工具：
 
-- `janet-format`：格式化 Janet 代码
-- `janet-netrepl`：远程 REPL
-- `janet-pm`：包管理辅助工具（与 jpm 配合）
+- ~janet-format~：格式化 Janet 代码
+- ~janet-netrepl~：远程 REPL
+- ~janet-pm~：包管理辅助工具（与 jpm 配合）
 
-这些脚本安装后位于 `JANET_PATH/bin`，可直接在命令行中使用。
+这些脚本安装后位于 ~JANET_PATH/bin~，可直接在命令行中使用。
 
 ** 15.7 在项目中使用 Spork
 
-在 `project.janet` 中声明依赖后即可在代码里引用：
+在 ~project.janet~ 中声明依赖后即可在代码里引用：
 
 #+begin_src janet
 (declare-project

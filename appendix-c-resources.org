@@ -6,71 +6,71 @@
 
 *** 官方网站和文档
 
-- **官方网站**: https://janet-lang.org/
-- **API 文档**: https://janet-lang.org/api/
-- **官方教程**: https://janet-lang.org/docs/index.html
-- **语言参考**: https://janet-lang.org/docs/syntax.html
+- *官方网站*: https://janet-lang.org/
+- *API 文档*: https://janet-lang.org/api/
+- *官方教程*: https://janet-lang.org/docs/index.html
+- *语言参考*: https://janet-lang.org/docs/syntax.html
 
 *** 源代码
 
-- **GitHub 仓库**: https://github.com/janet-lang/janet
-- **问题追踪**: https://github.com/janet-lang/janet/issues
-- **讨论区**: https://github.com/janet-lang/janet/discussions
+- *GitHub 仓库*: https://github.com/janet-lang/janet
+- *问题追踪*: https://github.com/janet-lang/janet/issues
+- *讨论区*: https://github.com/janet-lang/janet/discussions
 
 ** C.2 包和库
 
 *** 官方包索引
 
-- **Janet Packages**: https://github.com/janet-lang/pkgs
-- **包搜索**: https://janet-lang.org/pkgs/
+- *Janet Packages*: https://github.com/janet-lang/pkgs
+- *包搜索*: https://janet-lang.org/pkgs/
 
 *** 核心库
 
-**Spork** - 官方扩展标准库
+*Spork* - 官方扩展标准库
 - GitHub: https://github.com/janet-lang/spork
 - 功能: JSON, HTTP, 模板, 测试等
 
 *** 推荐第三方库
 
-**Web 开发**
-- `circlet` - Web 服务器框架
-- `joy` - 全栈 Web 框架
-- `temple` - 模板引擎
+*Web 开发*
+- ~circlet~ - Web 服务器框架
+- ~joy~ - 全栈 Web 框架
+- ~temple~ - 模板引擎
 
-**数据库**
-- `sqlite3` - SQLite 绑定
-- `pq` - PostgreSQL 客户端
-- `redis` - Redis 客户端
+*数据库*
+- ~sqlite3~ - SQLite 绑定
+- ~pq~ - PostgreSQL 客户端
+- ~redis~ - Redis 客户端
 
-**测试**
-- `testament` - 测试框架
-- `judge` - 测试运行器
+*测试*
+- ~testament~ - 测试框架
+- ~judge~ - 测试运行器
 
-**工具**
-- `sh` - Shell 命令辅助
-- `path` - 路径操作
-- `argparse` - 命令行参数解析
+*工具*
+- ~sh~ - Shell 命令辅助
+- ~path~ - 路径操作
+- ~argparse~ - 命令行参数解析
 
 ** C.3 学习资源
 
 *** 教程和指南
 
-**英文资源**
+*英文资源*
 - Learn Janet in Y Minutes: https://learnxinyminutes.com/janet/
 - Janet for Mortals: https://janet.guide/
 - Janet Tutorial: https://github.com/ahungry/janet-tutorial
 
-**视频教程**
+*视频教程*
 - YouTube: 搜索 "Janet Programming Language"
 - Janet 作者的演讲: https://www.youtube.com/c/BakaBakaBaka
 
 *** 书籍和文章
 
-**博客文章**
+*博客文章*
 - 官方博客: https://janet-lang.org/blog.html
 - Calvin Rose 的博客: https://bakpakin.com/
 
-**示例项目**
+*示例项目*
 - Janet Examples: https://github.com/janet-lang/janet/tree/master/examples
 - Awesome Janet: https://github.com/ahungry/awesome-janet
 
@@ -78,29 +78,29 @@
 
 *** 在线社区
 
-**官方渠道**
+*官方渠道*
 - Gitter 聊天室: https://gitter.im/janet-language/community
 - Discord 服务器: https://discord.gg/janet
 - Matrix: #janet:matrix.org
 
-**社交媒体**
+*社交媒体*
 - Reddit: r/janetlang
 - Twitter: #janetlang
 
 *** 贡献方式
 
-**代码贡献**
+*代码贡献*
 1. Fork 项目
 2. 创建分支
 3. 提交 PR
 4. 遵循代码风格
 
-**文档贡献**
+*文档贡献*
 - 改进文档
 - 翻译教程
 - 编写示例
 
-**社区贡献**
+*社区贡献*
 - 回答问题
 - 分享经验
 - 创建内容
@@ -109,38 +109,38 @@
 
 *** 编辑器支持
 
-**Emacs**
+*Emacs*
 #+begin_src elisp
 ;; janet-mode
 (use-package janet-mode
   :ensure t)
 #+end_src
 
-**Vim/Neovim**
+*Vim/Neovim*
 #+begin_src vim
 " janet.vim
 Plug 'janet-lang/janet.vim'
 #+end_src
 
-**VS Code**
+*VS Code*
 - 扩展: "Janet Language Support"
 - 功能: 语法高亮, 自动完成
 
-**Sublime Text**
+*Sublime Text*
 - Package: janet-sublime
 
-**Atom**
+*Atom*
 - Package: language-janet
 
 *** REPL 工具
 
-**Janet REPL 增强**
+*Janet REPL 增强*
 #+begin_src bash
 # 安装 rlwrap 获得更好的 REPL 体验
 rlwrap janet
 #+end_src
 
-**JPM 工具**
+*JPM 工具*
 #+begin_src bash
 # 项目管理
 jpm init
@@ -266,24 +266,24 @@ A:
 
 *** Janet 相关
 
-**Jaylib** - Janet 的 Raylib 绑定
+*Jaylib* - Janet 的 Raylib 绑定
 - 2D/3D 游戏开发
 - GitHub: https://github.com/janet-lang/jaylib
 
-**JPM** - Janet 包管理器
+*JPM* - Janet 包管理器
 - 内置工具
 - 类似 npm, cargo
 
-**Spork** - 标准扩展库
+*Spork* - 标准扩展库
 - JSON, HTTP, 模板等
 - 官方维护
 
 *** 灵感来源
 
-- **Clojure** - 语法和数据结构
-- **Lua** - 轻量级和嵌入性
-- **Scheme** - 简洁性
-- **Lisp** - S-表达式和宏
+- *Clojure* - 语法和数据结构
+- *Lua* - 轻量级和嵌入性
+- *Scheme* - 简洁性
+- *Lisp* - S-表达式和宏
 
 ** C.10 路线图
 
@@ -304,9 +304,9 @@ A:
 
 *** 提问渠道
 
-1. **GitHub Discussions** - 最好的提问地方
-2. **Gitter/Discord** - 实时交流
-3. **Stack Overflow** - 标签 `janet`
+1. *GitHub Discussions* - 最好的提问地方
+2. *Gitter/Discord* - 实时交流
+3. *Stack Overflow* - 标签 ~janet~
 
 *** 提问技巧
 
@@ -319,9 +319,9 @@ A:
 
 *** 关注更新
 
-- **GitHub**: Watch janet 仓库
-- **博客**: 订阅官方博客
-- **社交**: 关注 #janetlang
+- *GitHub*: Watch janet 仓库
+- *博客*: 订阅官方博客
+- *社交*: 关注 #janetlang
 
 *** 升级建议
 
@@ -344,13 +344,13 @@ brew upgrade janet  # macOS
 
 感谢所有为 Janet 做出贡献的人：
 
-- **Calvin Rose** - Janet 创建者
-- **Janet 社区** - 贡献者和用户
-- **Lisp 社区** - 长期的影响和启发
+- *Calvin Rose* - Janet 创建者
+- *Janet 社区* - 贡献者和用户
+- *Lisp 社区* - 长期的影响和启发
 
 ** C.14 许可证
 
-Janet 采用 **MIT 许可证**，非常自由：
+Janet 采用 *MIT 许可证*，非常自由：
 - 商业使用 ✓
 - 修改 ✓
 - 分发 ✓

@@ -122,7 +122,7 @@ janet:8:> (os/exit)
 
 *** Hello World（对比其他 Lisp）
 
-创建文件 `hello.janet`:
+创建文件 ~hello.janet~:
 
 #+begin_src janet
 # Janet
@@ -217,37 +217,37 @@ jpm build
 
 | 功能 | Common Lisp | Janet |
 |------|-------------|-------|
-| 定义变量 | `(defparameter x 10)` | ~(def x 10)~ |
-| 定义函数 | `(defun f (x) ...)` | `(defn f [x] ...)` |
-| Lambda | `(lambda (x) ...)` | `(fn [x] ...)` |
-| Let 绑定 | `(let ((x 1)) ...)` | `(let [x 1] ...)` |
-| 条件 | `(if ... ... ...)` | `(if ... ... ...)` |
-| 序列 | `(list 1 2 3)` | `[1 2 3]` 或 `'(1 2 3)` |
-| 关联数组 | `(make-hash-table)` | `{:key "value"}` |
-| 注释 | `;` | `#` |
+| 定义变量 | ~(defparameter x 10)~ | ~(def x 10)~ |
+| 定义函数 | ~(defun f (x) ...)~ | ~(defn f [x] ...)~ |
+| Lambda | ~(lambda (x) ...)~ | ~(fn [x] ...)~ |
+| Let 绑定 | ~(let ((x 1)) ...)~ | ~(let [x 1] ...)~ |
+| 条件 | ~(if ... ... ...)~ | ~(if ... ... ...)~ |
+| 序列 | ~(list 1 2 3)~ | ~[1 2 3]~ 或 ~'(1 2 3)~ |
+| 关联数组 | ~(make-hash-table)~ | ~{:key "value"}~ |
+| 注释 | ~;~ | ~#~ |
 
 *** Scheme → Janet 对照表
 
 | 功能 | Scheme | Janet |
 |------|--------|-------|
-| 定义 | `(define x 10)` | ~(def x 10)~ |
-| 函数 | `(define (f x) ...)` | `(defn f [x] ...)` |
-| Lambda | `(lambda (x) ...)` | `(fn [x] ...)` |
-| Let | `(let ((x 1)) ...)` | `(let [x 1] ...)` |
-| 向量 | `#(1 2 3)` | `[1 2 3]` |
-| 条件 | `(cond ...)` | `(cond ...)` |
+| 定义 | ~(define x 10)~ | ~(def x 10)~ |
+| 函数 | ~(define (f x) ...)~ | ~(defn f [x] ...)~ |
+| Lambda | ~(lambda (x) ...)~ | ~(fn [x] ...)~ |
+| Let | ~(let ((x 1)) ...)~ | ~(let [x 1] ...)~ |
+| 向量 | ~#(1 2 3)~ | ~[1 2 3]~ |
+| 条件 | ~(cond ...)~ | ~(cond ...)~ |
 
 *** Clojure → Janet 对照表
 
 | 功能 | Clojure | Janet |
 |------|---------|-------|
 | 定义 | ~(def x 10)~ | ~(def x 10)~ ✓ |
-| 函数 | `(defn f [x] ...)` | `(defn f [x] ...)` ✓ |
-| Lambda | `(fn [x] ...)` | `(fn [x] ...)` ✓ |
-| Let | `(let [x 1] ...)` | `(let [x 1] ...)` ✓ |
-| 向量 | `[1 2 3]` | `[1 2 3]` ✓ |
-| Map | `{:key "value"}` | `{:key "value"}` ✓ |
-| 关键字 | `:keyword` | `:keyword` ✓ |
+| 函数 | ~(defn f [x] ...)~ | ~(defn f [x] ...)~ ✓ |
+| Lambda | ~(fn [x] ...)~ | ~(fn [x] ...)~ ✓ |
+| Let | ~(let [x 1] ...)~ | ~(let [x 1] ...)~ ✓ |
+| 向量 | ~[1 2 3]~ | ~[1 2 3]~ ✓ |
+| Map | ~{:key "value"}~ | ~{:key "value"}~ ✓ |
+| 关键字 | ~:keyword~ | ~:keyword~ ✓ |
 
 可以看到，Janet 的语法最接近 Clojure！
 
@@ -329,11 +329,11 @@ Janet 鼓励 REPL 驱动开发（类似 Common Lisp）：
 
 *** 编辑器集成
 
-- **Emacs**: `janet-mode`
-- **Vim/Neovim**: `janet.vim`
-- **VS Code**: Janet 扩展
-- **Sublime Text**: Janet 语法高亮
-- **Atom**: `language-janet`
+- *Emacs*: ~janet-mode~
+- *Vim/Neovim*: ~janet.vim~
+- *VS Code*: Janet 扩展
+- *Sublime Text*: Janet 语法高亮
+- *Atom*: ~language-janet~
 
 *** 项目结构
 
@@ -470,25 +470,25 @@ jpm clean
 *** 从 Common Lisp 过来
 
 - *包系统*: Janet 没有 CL 那样复杂的包系统，模块更简单
-- **CLOS**: Janet 没有对象系统，使用函数式方法
-- **宏**: Janet 的宏类似但更简单，默认是卫生宏
-- **多值返回**: 使用元组代替
-- **条件系统**: Janet 使用更简单的 try/catch
+- *CLOS*: Janet 没有对象系统，使用函数式方法
+- *宏*: Janet 的宏类似但更简单，默认是卫生宏
+- *多值返回*: 使用元组代替
+- *条件系统*: Janet 使用更简单的 try/catch
 
 *** 从 Scheme 过来
 
-- **Continuations**: Janet 使用 fibers（协程）而不是 call/cc
-- **尾调用**: Janet 同样有尾调用优化
-- **宏**: Janet 的宏系统更接近 syntax-rules
-- **模块**: 更现代化的模块系统
+- *Continuations*: Janet 使用 fibers（协程）而不是 call/cc
+- *尾调用*: Janet 同样有尾调用优化
+- *宏*: Janet 的宏系统更接近 syntax-rules
+- *模块*: 更现代化的模块系统
 
 *** 从 Clojure 过来
 
-- **JVM**: Janet 是原生执行，无 JVM 开销
-- **语法**: 几乎相同！
-- **不可变性**: 两者都默认不可变
-- **并发**: Fibers vs Agents/Atoms/STM
-- **Java 互操作**: Janet 使用 FFI 与 C 互操作
+- *JVM*: Janet 是原生执行，无 JVM 开销
+- *语法*: 几乎相同！
+- *不可变性*: 两者都默认不可变
+- *并发*: Fibers vs Agents/Atoms/STM
+- *Java 互操作*: Janet 使用 FFI 与 C 互操作
 
 ** 1.10 下一步
 
